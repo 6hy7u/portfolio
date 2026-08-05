@@ -367,11 +367,6 @@ function App() {
 
   return (
     <>
-      {/* Browser tab title animation */}
-      <Helmet>
-        <title>{textStates[titleIndex]}</title>
-      </Helmet>
-
       {/* Splash Screen */}
       {showSplash && (
         <div
