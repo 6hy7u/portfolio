@@ -36,7 +36,7 @@ const SOCIALS = [
   },
   {
     label: "Spotify",
-    href: "https://open.spotify.com/user/YOUR_SPOTIFY_ID",
+    href: "https://open.spotify.com/user/9oibagutl5idtfsp6d7igt4gz",
     icon: Music,
   },
 ];
@@ -170,8 +170,13 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
-    audio.currentTime = ratio * audio.duration;
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.min(Math.max(clickX / rect.width, 0), 1);
+    const newTime = ratio * audio.duration;
+    audio.currentTime = newTime;
+    // Update progress immediately
+    setProgress(ratio);
+    setCurTime(fmt(newTime));
   };
 
   const silent = muted || volume === 0;
@@ -282,6 +287,30 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
+  const [discordStatus, setDiscordStatus] = useState("offline");
+
+  // Fetch Discord status
+  useEffect(() => {
+    const fetchDiscordStatus = async () => {
+      try {
+        // Using Discord's public API endpoint for widgets
+        const response = await fetch('https://api.lanyard.rest/v1/users/916061347698053222');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.discord_status) {
+            setDiscordStatus(data.data.discord_status);
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch Discord status');
+      }
+    };
+
+    fetchDiscordStatus();
+    // Refresh status every 30 seconds
+    const interval = setInterval(fetchDiscordStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSplashClick = () => {
     setShowSplash(false);
@@ -343,8 +372,16 @@ function App() {
         {/* Background video - visible behind page */}
         <div className="fixed inset-0 -z-10">
           <div className="absolute inset-0" style={{ background: BG }} />
-          <video autoPlay loop muted playsInline className="h-full w-full object-cover opacity-[0.65] blur-[4px]">
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="h-full w-full object-cover opacity-[0.65] blur-[4px]"
+            style={{ minHeight: '100vh', minWidth: '100vw' }}
+          >
             <source src="/background.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
           </video>
         </div>
 
@@ -376,7 +413,7 @@ function App() {
                   alt={PROFILE.displayName}
                   className="h-full w-full rounded-full object-cover"
                 />
-                <StatusDot status={PROFILE.status} />
+                <StatusDot status={discordStatus === "online" ? "online" : "offline"} />
               </div>
 
               {/* Identity */}
