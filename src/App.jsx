@@ -42,8 +42,8 @@ const SOCIALS = [
 ];
 
 const TRACK = {
-  title: "track title",
-  artist: "artist name",
+  title: "shotgun.",
+  artist: "overtonight",
   src: "/music.mp3",
   art: "/cover.png",
 };
