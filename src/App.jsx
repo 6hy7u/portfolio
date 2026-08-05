@@ -1,84 +1,103 @@
 import { motion } from "framer-motion";
+import { Music, Gamepad2 } from "lucide-react";
 
 function App() {
   return (
-    <main className="bg-black text-white min-h-screen">
+    <div className="min-h-screen bg-black text-white overflow-hidden">
 
-      <section className="h-screen flex items-center justify-center px-6">
-        <div>
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-7xl font-bold"
+      {/* Top Bar */}
+      <nav className="fixed top-0 left-0 w-full h-12 bg-black/60 backdrop-blur-md border-b border-white/10 flex justify-between items-center px-6 z-20">
+        <div className="font-semibold">
+          R-HASSAN
+        </div>
+
+        <div className="text-sm text-gray-400">
+          Home
+        </div>
+      </nav>
+
+
+      {/* Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-black/60" />
+
+        <video
+          autoPlay
+          loop
+          muted
+          className="w-full h-full object-cover"
+        >
+          <source src="/background.mp4" />
+        </video>
+      </div>
+
+
+      {/* Main */}
+      <main className="min-h-screen flex flex-col items-center justify-center gap-5 px-4">
+
+
+        {/* Discord Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-black/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 w-80 text-center"
+        >
+
+          <div className="relative inline-block">
+
+            <img
+              src="/profile.png"
+              className="w-32 h-32 rounded-full border-4 border-green-500 shadow-[0_0_30px_#22c55e]"
+            />
+
+          </div>
+
+
+          <h1 className="text-2xl font-bold mt-5">
+            R.H
+          </h1>
+
+
+          <div className="flex justify-center items-center gap-2 mt-3 text-green-400">
+            <span className="w-3 h-3 rounded-full bg-green-500" />
+            Online
+          </div>
+
+        </motion.div>
+
+
+
+        {/* Social Buttons */}
+        <div className="flex flex-col gap-3 w-80">
+
+
+          <a
+            href="https://steamcommunity.com/profiles/76561199491396349/"
+            target="_blank"
+            className="bg-white/10 hover:bg-white/20 transition rounded-xl p-4 flex items-center gap-3"
           >
-            Ram Hassan
-          </motion.h1>
-
-          <p className="text-gray-400 text-xl mt-5">
-            Developer building modern web experiences.
-          </p>
-
-          <div className="mt-8 flex gap-4">
-            <button className="bg-white text-black px-6 py-3 rounded-full">
-              Projects
-            </button>
-
-            <button className="border border-gray-600 px-6 py-3 rounded-full">
-              Contact
-            </button>
-          </div>
-
-        </div>
-      </section>
+            <Gamepad2 />
+            Steam
+          </a>
 
 
-      <section className="px-6 py-24 max-w-5xl mx-auto">
-        <h2 className="text-4xl font-bold">
-          About
-        </h2>
+          <a
+            href="https://open.spotify.com/user/9oibagutl5idtfsp6d7igt4gz"
+            target="_blank"
+            className="bg-white/10 hover:bg-white/20 transition rounded-xl p-4 flex items-center gap-3"
+          >
+            <Music />
+            Spotify
+          </a>
 
-        <p className="text-gray-400 mt-5">
-          I build websites, applications and digital experiences.
-        </p>
-      </section>
-
-
-      <section className="px-6 py-24 max-w-5xl mx-auto">
-
-        <h2 className="text-4xl font-bold">
-          Projects
-        </h2>
-
-        <div className="grid md:grid-cols-2 gap-6 mt-10">
-
-          <div className="bg-zinc-900 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold">
-              Project One
-            </h3>
-
-            <p className="text-gray-400 mt-3">
-              Description of your project.
-            </p>
-          </div>
-
-
-          <div className="bg-zinc-900 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold">
-              Project Two
-            </h3>
-
-            <p className="text-gray-400 mt-3">
-              Description of your project.
-            </p>
-          </div>
 
         </div>
 
-      </section>
 
-    </main>
+      </main>
+
+    </div>
   )
 }
 
-export default App
+export default App;
