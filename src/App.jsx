@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Helmet } from 'react-helmet-async';
 import {
   Gamepad2,
   MessageCircle,
@@ -104,7 +105,7 @@ function Equalizer({ active }) {
 
 function MusicPlayer({ audioRef, playing, setPlaying }) {
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(50);
+  const [volume, setVolume] = useState(62);
   const [progress, setProgress] = useState(0);
   const [curTime, setCurTime] = useState("0:00");
   const [totalTime, setTotalTime] = useState("0:00");
@@ -350,7 +351,7 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setTitleIndex((prev) => (prev + 1) % textStates.length);
-    }, 300); // Change text every 300ms
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [titleIndex]);
@@ -367,6 +368,11 @@ function App() {
 
   return (
     <>
+      {/* Browser tab title animation */}
+      <Helmet>
+        <title>{textStates[titleIndex]}</title>
+      </Helmet>
+
       {/* Splash Screen */}
       {showSplash && (
         <div
@@ -423,7 +429,7 @@ function App() {
           </a>
         </nav>
 
-        {/* Background video - fixed with no white overlay */}
+        {/* Background video - NO WHITE OVERLAY */}
         <div className="fixed inset-0 z-0">
           <video
             autoPlay
