@@ -35,9 +35,9 @@ const SOCIALS = [
     icon: Gamepad2,
   },
   {
-    label: "Discord",
-    href: "https://discord.com/users/YOUR_DISCORD_ID",
-    icon: MessageCircle,
+    label: "Spotify",
+    href: "https://open.spotify.com/user/YOUR_SPOTIFY_ID",
+    icon: Music,
   },
 ];
 
@@ -102,9 +102,7 @@ function Equalizer({ active }) {
   );
 }
 
-function MusicPlayer() {
-  const audioRef = useRef(null);
-  const [playing, setPlaying] = useState(false);
+function MusicPlayer({ audioRef, playing, setPlaying }) {
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(62);
   const [progress, setProgress] = useState(0);
@@ -138,13 +136,16 @@ function MusicPlayer() {
       audio.removeEventListener("durationchange", onDuration);
       audio.removeEventListener("ended", onEnd);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [audioRef, setPlaying]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (playing) audio.pause();
-    else audio.play().catch(() => {});
+    if (playing) {
+      audio.pause();
+    } else {
+      audio.play().catch(() => {});
+    }
     setPlaying(!playing);
   };
 
@@ -169,27 +170,17 @@ function MusicPlayer() {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
+    const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
     audio.currentTime = ratio * audio.duration;
   };
 
   const silent = muted || volume === 0;
-
-  // Update volume slider background on drag
-  const volumeSliderRef = useRef(null);
-  useEffect(() => {
-    if (volumeSliderRef.current) {
-      volumeSliderRef.current.style.background = `linear-gradient(90deg, ${PURPLE} 0%, ${PURPLE} ${volume}%, #1e1e1e ${volume}%)`;
-    }
-  }, [volume]);
 
   return (
     <div
       className="w-full overflow-visible rounded-xl border"
       style={{ background: CARD_BG, borderColor: BORDER }}
     >
-      <audio ref={audioRef} src={TRACK.src} loop />
-
       {/* Top row: art, title/artist, play button */}
       <div className="flex items-center gap-2.5 px-3 pb-2.5 pt-3">
         <div
@@ -269,7 +260,6 @@ function MusicPlayer() {
           <Tip>{silent ? "unmute" : "mute"}</Tip>
         </button>
         <input
-          ref={volumeSliderRef}
           type="range"
           min={0}
           max={100}
@@ -290,12 +280,14 @@ function MusicPlayer() {
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
 
   const handleSplashClick = () => {
     setShowSplash(false);
     if (audioRef.current) {
       audioRef.current.play().catch(() => {});
+      setPlaying(true);
     }
   };
 
@@ -425,12 +417,12 @@ function App() {
             </div>
 
             {/* Music player */}
-            <MusicPlayer />
+            <MusicPlayer audioRef={audioRef} playing={playing} setPlaying={setPlaying} />
           </div>
         </main>
       </div>
 
-      {/* Hidden audio element for splash screen */}
+      {/* Single audio element for everything */}
       <audio ref={audioRef} src={TRACK.src} loop />
     </>
   );
