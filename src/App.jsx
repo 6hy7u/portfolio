@@ -42,8 +42,8 @@ const SOCIALS = [
 ];
 
 const TRACK = {
-  title: "shotgun.",
-  artist: "overtonight",
+  title: "track title",
+  artist: "artist name",
   src: "/music.mp3",
   art: "/cover.png",
 };
@@ -104,7 +104,7 @@ function Equalizer({ active }) {
 
 function MusicPlayer({ audioRef, playing, setPlaying }) {
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(62);
+  const [volume, setVolume] = useState(50);
   const [progress, setProgress] = useState(0);
   const [curTime, setCurTime] = useState("0:00");
   const [totalTime, setTotalTime] = useState("0:00");
@@ -285,9 +285,36 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [playing, setPlaying] = useState(false);
-  const [showTitle, setShowTitle] = useState(false);
+  const [titleIndex, setTitleIndex] = useState(0);
   const audioRef = useRef(null);
   const [discordStatus, setDiscordStatus] = useState("online");
+
+  // Text animation states
+  const textStates = [
+    "R-HASSAN | Hello World",
+    "-HASSAN | Hello World R",
+    "HASSAN | Hello World R-",
+    "ASSAN | Hello World R-H",
+    "SSAN | Hello World R-HA",
+    "SAN | Hello World R-HAS",
+    "AN | Hello World R-HASS",
+    "N | Hello World R-HASSA",
+    " | Hello World R-HASSAN",
+    "| Hello World R-HASSAN ",
+    " Hello World R-HASSAN |",
+    "Hello World R-HASSAN | ",
+    "ello World R-HASSAN | H",
+    "llo World R-HASSAN | He",
+    "lo World R-HASSAN | Hel",
+    "o World R-HASSAN | Hell",
+    " World R-HASSAN | Hello",
+    "World R-HASSAN | Hello ",
+    "orld R-HASSAN | Hello W",
+    "rld R-HASSAN | Hello Wo",
+    "ld R-HASSAN | Hello Wor",
+    "d R-HASSAN | Hello Worl",
+    " R-HASSAN | Hello World",
+  ];
 
   // Fetch real Discord status using Lanyard API
   useEffect(() => {
@@ -319,13 +346,14 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Animate title in after page loads
+  // Animate title through text states
   useEffect(() => {
     const timer = setTimeout(() => {
-      setShowTitle(true);
-    }, 500);
+      setTitleIndex((prev) => (prev + 1) % textStates.length);
+    }, 300); // Change text every 300ms
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [titleIndex]);
 
   const handleSplashClick = () => {
     setShowSplash(false);
@@ -374,21 +402,17 @@ function App() {
         {/* Nav - made slightly taller */}
         <nav
           className="fixed left-0 top-0 z-20 flex h-[72px] w-full items-center justify-between border-b px-6"
-          style={{ background: "#080808", borderColor: BORDER }}
+          style={{ background: "rgba(8,8,8,0.9)", borderColor: BORDER }}
         >
-          {/* Animated site title - slides in from right */}
+          {/* Animated site title */}
           <motion.div
-            className="text-[0.95rem] font-semibold tracking-tight overflow-hidden"
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: showTitle ? '0%' : '100%', opacity: showTitle ? 1 : 0 }}
-            transition={{ 
-              type: "spring",
-              stiffness: 100,
-              damping: 20,
-              duration: 0.8
-            }}
+            className="text-[0.95rem] font-semibold tracking-tight overflow-hidden whitespace-nowrap"
+            key={titleIndex}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            R-HASSAN | Hello World
+            {textStates[titleIndex]}
           </motion.div>
           <a
             href="/"
@@ -399,14 +423,15 @@ function App() {
           </a>
         </nav>
 
-        {/* Background video - fixed z-index issue */}
+        {/* Background video - fixed with no white overlay */}
         <div className="fixed inset-0 z-0">
           <video
             autoPlay
             loop
             muted
             playsInline
-            className="h-full w-full object-cover opacity-65 blur-[4px]"
+            className="h-full w-full object-cover"
+            style={{ opacity: 0.65, filter: 'blur(4px)' }}
           >
             <source src="/background.mp4" type="video/mp4" />
           </video>
