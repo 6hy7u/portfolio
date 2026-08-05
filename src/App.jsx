@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Gamepad2,
   MessageCircle,
@@ -9,12 +9,14 @@ import {
   Pause,
   Volume2,
   VolumeX,
+  Music,
 } from "lucide-react";
 
 /**
- * Fonts: add these to your index.html <head>
+ * Fonts: add this to your index.html <head>
  * <link rel="preconnect" href="https://fonts.googleapis.com">
- * <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+ * <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ * <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
  */
 
 // ---- Edit these to your own info -----------------------------------------
@@ -24,7 +26,6 @@ const PROFILE = {
   bio: "Just some dev who likes to play games.",
   avatar: "/profile.png",
   status: "online", // "online" | "offline"
-  views: 61,
 };
 
 const SOCIALS = [
@@ -43,22 +44,27 @@ const SOCIALS = [
 const TRACK = {
   title: "track title",
   artist: "artist name",
-  src: "/music.mp3", // matches your public/music.mp3
-  art: "/cover.png", // matches your public/cover.png
+  src: "/music.mp3",
+  art: "/cover.png",
 };
 // ---------------------------------------------------------------------------
 
-const ACCENT = "#8B7CFF";
-const ACCENT_2 = "#FF6F9C";
+// Design tokens, matched to the reference palette
+const GREEN = "#3d8b5e";
+const GREEN_DIM = "rgb(40,90,61)";
+const GREEN_DARK = "rgb(12,28,19)";
+const BG = "#080808";
+const BORDER = "#141414";
+const CARD_BG = "rgba(14,14,14,0.85)";
+const TEXT_MUTED = "#888";
+const TEXT_DIM = "#444";
 
-// Small reusable tooltip that drops below whatever it's attached to,
-// matching the reference's hover-tip pattern on badges/status/likes.
 function Tip({ children }) {
   return (
     <span
-      className="pointer-events-none absolute left-1/2 top-[calc(100%+7px)] -translate-x-1/2 translate-y-[-4px]
-                 whitespace-nowrap rounded-md border border-white/10 bg-[#181818] px-2.5 py-1.5
-                 text-[11px] tracking-wide text-white opacity-0 transition
+      className="pointer-events-none absolute left-1/2 top-[calc(100%+7px)] z-20 -translate-x-1/2 translate-y-[-4px]
+                 whitespace-nowrap rounded-md border border-[#222] bg-[#181818] px-2.5 py-1.5
+                 text-[10.5px] tracking-wide text-[#f0f0f0] opacity-0 transition
                  group-hover:translate-y-0 group-hover:opacity-100"
     >
       {children}
@@ -69,23 +75,13 @@ function Tip({ children }) {
 function StatusDot({ status }) {
   const online = status === "online";
   return (
-    <span className="group relative inline-flex">
+    <span className="group absolute bottom-[3px] right-[3px] inline-flex">
       <span
-        className={`h-3 w-3 rounded-full border-2 border-[#0e0e0e] ${
-          online ? "bg-[#3ecf6a]" : "bg-[#444]"
-        }`}
+        className="h-[11px] w-[11px] rounded-full border-2"
+        style={{ borderColor: "#0e0e0e", background: online ? "#3ecf6a" : "#444" }}
       />
       <Tip>{online ? "online" : "offline"}</Tip>
     </span>
-  );
-}
-
-function ViewCount({ count }) {
-  return (
-    <div className="flex items-center gap-1.5 text-[11px] tracking-wide text-gray-500">
-      <Eye size={12} />
-      {count}
-    </div>
   );
 }
 
@@ -99,12 +95,10 @@ function LikeButton() {
         setLiked((v) => !v);
         setCount((c) => (liked ? c - 1 : c + 1));
       }}
-      className="group relative flex items-center gap-1.5 rounded px-1.5 py-1 text-sm text-gray-500 transition hover:text-gray-300"
+      className="group relative flex items-center gap-[5px] px-[7px] py-[5px] text-[14px] transition"
+      style={{ color: liked ? GREEN : TEXT_DIM }}
     >
-      <ThumbsUp
-        size={14}
-        style={liked ? { fill: ACCENT, color: ACCENT } : undefined}
-      />
+      <ThumbsUp size={13} style={liked ? { fill: GREEN } : undefined} />
       <Tip>
         {count} like{count === 1 ? "" : "s"}
       </Tip>
@@ -112,50 +106,17 @@ function LikeButton() {
   );
 }
 
-// Signature element: a slowly rotating conic-gradient ring behind the avatar.
-function AvatarRing({ src, alt, status }) {
-  return (
-    <div className="relative mx-auto h-[84px] w-[84px]">
-      <motion.div
-        className="absolute inset-[-4px] rounded-full"
-        style={{
-          background: `conic-gradient(from 0deg, ${ACCENT}, ${ACCENT_2}, #3ecf6a, ${ACCENT})`,
-        }}
-        animate={{ rotate: 360 }}
-        transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
-      />
-      <div className="absolute inset-[2px] rounded-full bg-[#0a0a10]" />
-      <img
-        src={src}
-        alt={alt}
-        className="absolute inset-[4px] h-[calc(100%-8px)] w-[calc(100%-8px)] rounded-full object-cover"
-      />
-      <div className="absolute bottom-0 right-0">
-        <StatusDot status={status} />
-      </div>
-    </div>
-  );
-}
-
 function Equalizer({ active }) {
-  const bars = [0, 1, 2, 3, 4];
+  const durations = [0.65, 0.9, 0.55, 0.75, 0.85];
   return (
-    <div className="flex h-3.5 items-end gap-[2px]">
-      {bars.map((i) => (
+    <div className="flex h-[14px] items-end gap-[2px]">
+      {durations.map((d, i) => (
         <motion.span
           key={i}
-          className="w-[3px] rounded-sm"
-          style={{ background: `linear-gradient(180deg, ${ACCENT_2}, ${ACCENT})` }}
-          animate={
-            active
-              ? { height: ["15%", "100%", "35%", "80%", "15%"] }
-              : { height: "20%" }
-          }
-          transition={
-            active
-              ? { repeat: Infinity, duration: 0.7 + i * 0.12, ease: "easeInOut" }
-              : { duration: 0.2 }
-          }
+          className="w-[3px] rounded-[1px]"
+          style={{ background: `linear-gradient(180deg, ${GREEN}, ${GREEN})`, opacity: 0.85 }}
+          animate={active ? { height: ["3px", "14px", "3px"] } : { height: "4px" }}
+          transition={active ? { repeat: Infinity, duration: d, ease: "easeInOut" } : { duration: 0.15 }}
         />
       ))}
     </div>
@@ -171,11 +132,11 @@ function MusicPlayer() {
   const [curTime, setCurTime] = useState("0:00");
   const [totalTime, setTotalTime] = useState("0:00");
 
-  const fmt = (secs) => {
-    if (!Number.isFinite(secs)) return "0:00";
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
+  const fmt = (s) => {
+    if (!Number.isFinite(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60).toString().padStart(2, "0");
+    return `${m}:${sec}`;
   };
 
   useEffect(() => {
@@ -236,34 +197,45 @@ function MusicPlayer() {
   const silent = muted || volume === 0;
 
   return (
-    <div className="w-full rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+    <div
+      className="w-full overflow-visible rounded-xl border"
+      style={{ background: CARD_BG, borderColor: BORDER }}
+    >
       <audio ref={audioRef} src={TRACK.src} loop />
 
-      <div className="flex items-center gap-2.5 px-3 pb-2 pt-3">
-        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/5">
-          <img src={TRACK.art} alt="" className="h-full w-full object-cover" />
+      {/* Top row: art, title/artist, play button */}
+      <div className="flex items-center gap-2.5 px-3 pb-2.5 pt-3">
+        <div
+          className="flex h-[46px] w-[46px] shrink-0 items-center justify-center overflow-hidden rounded-[5px]"
+          style={{ background: "#131313", color: TEXT_DIM }}
+        >
+          {TRACK.art ? (
+            <img src={TRACK.art} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <Music size={18} />
+          )}
         </div>
 
-        <div className="min-w-0 flex-1 font-[Inter]">
-          <div className="truncate text-[13px] font-semibold">{TRACK.title}</div>
-          <div className="truncate text-[11px] text-gray-500">{TRACK.artist}</div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13px] font-semibold text-[#f0f0f0]">{TRACK.title}</div>
+          <div className="mt-[2px] truncate text-[11px]" style={{ color: "#555" }}>
+            {TRACK.artist}
+          </div>
         </div>
-
-        <Equalizer active={playing} />
 
         <button
           onClick={togglePlay}
-          className="group relative shrink-0 p-1 opacity-80 transition hover:opacity-100"
-          style={{ color: ACCENT }}
+          className="group relative shrink-0 p-[3px] opacity-75 transition hover:opacity-100"
+          style={{ color: GREEN }}
         >
           <AnimatePresence mode="wait" initial={false}>
             {playing ? (
               <motion.span key="pause" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <Pause size={16} fill={ACCENT} />
+                <Pause size={17} fill={GREEN} />
               </motion.span>
             ) : (
               <motion.span key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <Play size={16} fill={ACCENT} />
+                <Play size={17} fill={GREEN} />
               </motion.span>
             )}
           </AnimatePresence>
@@ -271,25 +243,40 @@ function MusicPlayer() {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 px-3 pb-2.5">
-        <span className="min-w-[26px] text-[10px] text-gray-500">{curTime}</span>
+      {/* Progress row */}
+      <div className="flex items-center gap-[7px] px-3 pb-2.5">
+        <span className="min-w-[26px] text-[10px]" style={{ color: "#555" }}>
+          {curTime}
+        </span>
         <div
           onClick={seek}
-          className="h-[3px] flex-1 cursor-pointer rounded-full bg-white/10"
+          className="h-[3px] flex-1 cursor-pointer rounded-[2px]"
+          style={{ background: "#1e1e1e" }}
         >
           <div
-            className="h-full rounded-full"
-            style={{ width: `${progress * 100}%`, background: `linear-gradient(90deg, ${ACCENT}, ${ACCENT_2})` }}
+            className="h-full rounded-[2px]"
+            style={{ width: `${progress * 100}%`, background: `linear-gradient(90deg, ${GREEN}, ${GREEN})` }}
           />
         </div>
-        <span className="min-w-[26px] text-right text-[10px] text-gray-500">{totalTime}</span>
+        <span className="min-w-[26px] text-right text-[10px]" style={{ color: "#555" }}>
+          {totalTime}
+        </span>
       </div>
 
-      <div className="flex items-center gap-2 border-t border-white/10 px-3 py-2.5">
+      {/* Now playing row */}
+      <div className="flex items-center gap-2 px-3 pb-2.5">
+        <span className="text-[9.5px] tracking-wider opacity-80" style={{ color: GREEN }}>
+          now playing
+        </span>
+        <Equalizer active={playing} />
+      </div>
+
+      {/* Controls row */}
+      <div className="flex items-center gap-2.5 border-t px-3 py-2.5" style={{ borderColor: BORDER }}>
         <button
           onClick={toggleMute}
-          className="group relative shrink-0 p-1 opacity-80 transition hover:opacity-100"
-          style={{ color: silent ? "#555" : ACCENT }}
+          className="group relative shrink-0 p-[3px] opacity-75 transition hover:opacity-100"
+          style={{ color: silent ? "#555" : GREEN }}
         >
           {silent ? <VolumeX size={13} /> : <Volume2 size={13} />}
           <Tip>{silent ? "unmute" : "mute"}</Tip>
@@ -300,13 +287,14 @@ function MusicPlayer() {
           max={100}
           value={volume}
           onChange={onVolumeChange}
-          className="h-[3px] flex-1 cursor-pointer appearance-none rounded-full accent-current"
+          className="h-[3px] flex-1 cursor-pointer appearance-none rounded-[2px]"
           style={{
-            background: `linear-gradient(90deg, ${ACCENT} 0%, ${ACCENT_2} ${volume}%, rgba(255,255,255,0.1) ${volume}%)`,
-            color: ACCENT,
+            background: `linear-gradient(90deg, ${GREEN} 0%, ${GREEN} ${volume}%, #1e1e1e ${volume}%)`,
           }}
         />
-        <span className="min-w-[28px] text-right text-[10px] text-gray-600">{volume}%</span>
+        <span className="min-w-[28px] text-right text-[9.5px]" style={{ color: "#444" }}>
+          {volume}%
+        </span>
       </div>
     </div>
   );
@@ -314,73 +302,106 @@ function MusicPlayer() {
 
 function App() {
   return (
-    <div className="min-h-screen overflow-hidden bg-[#0a0a10] font-[Inter] text-white">
-      {/* Top Bar */}
-      <nav className="fixed left-0 top-0 z-20 flex h-12 w-full items-center justify-between border-b border-white/10 bg-black/50 px-6 backdrop-blur-md">
-        <div className="font-[Space_Grotesk] font-semibold tracking-wide">R-HASSAN</div>
-        <a href="/" className="text-sm text-gray-400 transition hover:text-white">
-          Home
+    <div
+      className="min-h-screen overflow-hidden font-[JetBrains_Mono]"
+      style={{ background: BG, color: "#f0f0f0" }}
+    >
+      {/* Nav */}
+      <nav
+        className="fixed left-0 top-0 z-20 flex h-[52px] w-full items-center justify-between border-b px-6"
+        style={{ background: "#080808", borderColor: BORDER }}
+      >
+        <div className="text-[0.95rem] font-semibold tracking-tight">R-HASSAN</div>
+        <a
+          href="/"
+          className="text-[0.8rem] tracking-wide transition"
+          style={{ color: TEXT_MUTED }}
+        >
+          home
         </a>
       </nav>
 
-      {/* Background */}
+      {/* Background video */}
       <div className="fixed inset-0 -z-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 20%, rgba(139,124,255,0.12), transparent 60%), #0a0a10",
-          }}
-        />
-        <div className="absolute inset-0 bg-black/60" />
-        <video autoPlay loop muted playsInline className="h-full w-full object-cover opacity-70">
+        <div className="absolute inset-0" style={{ background: BG }} />
+        <video autoPlay loop muted playsInline className="h-full w-full object-cover opacity-[0.35] blur-[20px]">
           <source src="/background.mp4" type="video/mp4" />
         </video>
       </div>
 
       {/* Main */}
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 pb-10 pt-16">
-        {/* Profile Card */}
-        <div className="w-full max-w-[340px] rounded-xl border border-white/10 bg-white/[0.04] p-5 text-center backdrop-blur-xl">
-          <div className="mb-3 flex items-center justify-between">
-            <span />
-            <ViewCount count={PROFILE.views} />
+      <main className="flex min-h-screen flex-col items-center justify-center gap-5 px-4 pb-10 pt-16">
+        <div className="flex w-full max-w-[340px] flex-col items-center gap-3">
+          {/* Card */}
+          <div
+            className="flex w-full flex-col items-center gap-3 rounded-xl border p-5"
+            style={{ background: CARD_BG, borderColor: BORDER }}
+          >
+            {/* Badge row: (empty badge slot) + view count */}
+            <div className="flex w-full items-center justify-between">
+              <div />
+              <div className="flex items-center gap-[5px]" style={{ color: TEXT_DIM }}>
+                <Eye size={11} />
+                <span className="text-[0.68rem] tracking-wide">{PROFILE.views}</span>
+              </div>
+            </div>
+
+            {/* Avatar */}
+            <div
+              className="relative shrink-0 rounded-full p-[2px]"
+              style={{
+                width: "clamp(72px, 18vw, 88px)",
+                height: "clamp(72px, 18vw, 88px)",
+                background: `linear-gradient(135deg, ${GREEN}, ${GREEN})`,
+              }}
+            >
+              <img
+                src={PROFILE.avatar}
+                alt={PROFILE.displayName}
+                className="h-full w-full rounded-full object-cover"
+              />
+              <StatusDot status={PROFILE.status} />
+            </div>
+
+            {/* Identity */}
+            <div className="flex flex-col items-center gap-1 text-center">
+              <div className="text-[clamp(0.95rem,3vw,1.1rem)] font-semibold tracking-tight">
+                {PROFILE.displayName}
+              </div>
+              <div className="text-[0.78rem] tracking-wide" style={{ color: GREEN }}>
+                {PROFILE.handle}
+              </div>
+            </div>
+
+            <p className="max-w-[260px] text-center text-[0.74rem] leading-[1.75]" style={{ color: TEXT_MUTED }}>
+              {PROFILE.bio}
+            </p>
+
+            <div className="h-px w-full" style={{ background: BORDER }} />
+
+            {/* Links */}
+            <div className="flex w-full flex-col gap-2">
+              {SOCIALS.map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-[0.65rem] rounded-[7px] border px-[0.9rem] py-[0.6rem] text-[0.75rem] tracking-wide transition"
+                  style={{ background: "#131313", borderColor: BORDER, color: "#c0c0c0" }}
+                >
+                  <Icon size={14} style={{ color: GREEN, opacity: 0.75 }} />
+                  {label}
+                </a>
+              ))}
+            </div>
+
+            <div className="flex w-full justify-end">
+              <LikeButton />
+            </div>
           </div>
 
-          <AvatarRing src={PROFILE.avatar} alt={`${PROFILE.displayName} avatar`} status={PROFILE.status} />
-
-          <h1 className="mt-3 font-[Space_Grotesk] text-lg font-semibold">{PROFILE.displayName}</h1>
-          <p className="text-[13px]" style={{ color: ACCENT }}>
-            {PROFILE.handle}
-          </p>
-          <p className="mx-auto mt-2 max-w-[260px] text-[12px] leading-relaxed text-gray-400">
-            {PROFILE.bio}
-          </p>
-
-          <div className="my-4 h-px w-full bg-white/10" />
-
-          <div className="flex flex-col gap-2">
-            {SOCIALS.map(({ label, href, icon: Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-[13px] text-gray-300 transition hover:border-white/20 hover:text-white"
-              >
-                <Icon size={16} />
-                {label}
-              </a>
-            ))}
-          </div>
-
-          <div className="mt-2 flex justify-end">
-            <LikeButton />
-          </div>
-        </div>
-
-        {/* Music Player */}
-        <div className="w-full max-w-[340px]">
+          {/* Music player */}
           <MusicPlayer />
         </div>
       </main>
