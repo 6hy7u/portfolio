@@ -285,6 +285,7 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [playing, setPlaying] = useState(false);
+  const [showTitle, setShowTitle] = useState(false);
   const audioRef = useRef(null);
   const [discordStatus, setDiscordStatus] = useState("online");
 
@@ -316,6 +317,14 @@ function App() {
     fetchDiscordStatus();
     const interval = setInterval(fetchDiscordStatus, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Animate title in after page loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTitle(true);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSplashClick = () => {
@@ -359,15 +368,28 @@ function App() {
       )}
 
       <div
-        className="min-h-screen overflow-hidden font-[JetBrains_Mono]"
-        style={{ background: BG, color: "#f0f0f0" }}
+        className="relative z-10 min-h-screen overflow-hidden font-[JetBrains_Mono]"
+        style={{ color: "#f0f0f0" }}
       >
         {/* Nav - made slightly taller */}
         <nav
           className="fixed left-0 top-0 z-20 flex h-[72px] w-full items-center justify-between border-b px-6"
           style={{ background: "#080808", borderColor: BORDER }}
         >
-          <div className="text-[0.95rem] font-semibold tracking-tight">R-HASSAN</div>
+          {/* Animated site title - slides in from right */}
+          <motion.div
+            className="text-[0.95rem] font-semibold tracking-tight overflow-hidden"
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: showTitle ? '0%' : '100%', opacity: showTitle ? 1 : 0 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 100,
+              damping: 20,
+              duration: 0.8
+            }}
+          >
+            R-HASSAN | Hello World
+          </motion.div>
           <a
             href="/"
             className="text-[0.8rem] tracking-wide transition"
@@ -377,15 +399,14 @@ function App() {
           </a>
         </nav>
 
-        {/* Background video - now properly layered */}
+        {/* Background video - fixed z-index issue */}
         <div className="fixed inset-0 z-0">
-          <div className="absolute inset-0" style={{ background: BG }} />
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-            className="h-full w-full object-cover opacity-[0.65] blur-[4px]"
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="h-full w-full object-cover opacity-65 blur-[4px]"
           >
             <source src="/background.mp4" type="video/mp4" />
           </video>
