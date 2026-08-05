@@ -23,7 +23,7 @@ import {
 const PROFILE = {
   displayName: "R.H",
   handle: "@r-hassan",
-  bio: "Just some dev who likes to play games.",
+  bio: "Made this for fun",
   avatar: "/profile.png",
   status: "online", // "online" | "offline"
 };
@@ -50,9 +50,9 @@ const TRACK = {
 // ---------------------------------------------------------------------------
 
 // Design tokens, matched to the reference palette
-const GREEN = "#3d8b5e";
-const GREEN_DIM = "rgb(40,90,61)";
-const GREEN_DARK = "rgb(12,28,19)";
+const PURPLE = "#8b5cf6";
+const PURPLE_DIM = "#6d3fd9";
+const PURPLE_DARK = "#221233";
 const BG = "#080808";
 const BORDER = "#141414";
 const CARD_BG = "rgba(14,14,14,0.85)";
@@ -85,27 +85,6 @@ function StatusDot({ status }) {
   );
 }
 
-function LikeButton() {
-  const [liked, setLiked] = useState(false);
-  const [count, setCount] = useState(1);
-
-  return (
-    <button
-      onClick={() => {
-        setLiked((v) => !v);
-        setCount((c) => (liked ? c - 1 : c + 1));
-      }}
-      className="group relative flex items-center gap-[5px] px-[7px] py-[5px] text-[14px] transition"
-      style={{ color: liked ? GREEN : TEXT_DIM }}
-    >
-      <ThumbsUp size={13} style={liked ? { fill: GREEN } : undefined} />
-      <Tip>
-        {count} like{count === 1 ? "" : "s"}
-      </Tip>
-    </button>
-  );
-}
-
 function Equalizer({ active }) {
   const durations = [0.65, 0.9, 0.55, 0.75, 0.85];
   return (
@@ -114,7 +93,7 @@ function Equalizer({ active }) {
         <motion.span
           key={i}
           className="w-[3px] rounded-[1px]"
-          style={{ background: `linear-gradient(180deg, ${GREEN}, ${GREEN})`, opacity: 0.85 }}
+          style={{ background: `linear-gradient(180deg, ${PURPLE}, ${PURPLE})`, opacity: 0.85 }}
           animate={active ? { height: ["3px", "14px", "3px"] } : { height: "4px" }}
           transition={active ? { repeat: Infinity, duration: d, ease: "easeInOut" } : { duration: 0.15 }}
         />
@@ -196,6 +175,14 @@ function MusicPlayer() {
 
   const silent = muted || volume === 0;
 
+  // Update volume slider background on drag
+  const volumeSliderRef = useRef(null);
+  useEffect(() => {
+    if (volumeSliderRef.current) {
+      volumeSliderRef.current.style.background = `linear-gradient(90deg, ${PURPLE} 0%, ${PURPLE} ${volume}%, #1e1e1e ${volume}%)`;
+    }
+  }, [volume]);
+
   return (
     <div
       className="w-full overflow-visible rounded-xl border"
@@ -226,16 +213,16 @@ function MusicPlayer() {
         <button
           onClick={togglePlay}
           className="group relative shrink-0 p-[3px] opacity-75 transition hover:opacity-100"
-          style={{ color: GREEN }}
+          style={{ color: PURPLE }}
         >
           <AnimatePresence mode="wait" initial={false}>
             {playing ? (
               <motion.span key="pause" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <Pause size={17} fill={GREEN} />
+                <Pause size={17} fill={PURPLE} />
               </motion.span>
             ) : (
               <motion.span key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <Play size={17} fill={GREEN} />
+                <Play size={17} fill={PURPLE} />
               </motion.span>
             )}
           </AnimatePresence>
@@ -255,7 +242,7 @@ function MusicPlayer() {
         >
           <div
             className="h-full rounded-[2px]"
-            style={{ width: `${progress * 100}%`, background: `linear-gradient(90deg, ${GREEN}, ${GREEN})` }}
+            style={{ width: `${progress * 100}%`, background: `linear-gradient(90deg, ${PURPLE}, ${PURPLE})` }}
           />
         </div>
         <span className="min-w-[26px] text-right text-[10px]" style={{ color: "#555" }}>
@@ -265,7 +252,7 @@ function MusicPlayer() {
 
       {/* Now playing row */}
       <div className="flex items-center gap-2 px-3 pb-2.5">
-        <span className="text-[9.5px] tracking-wider opacity-80" style={{ color: GREEN }}>
+        <span className="text-[9.5px] tracking-wider opacity-80" style={{ color: PURPLE }}>
           now playing
         </span>
         <Equalizer active={playing} />
@@ -276,12 +263,13 @@ function MusicPlayer() {
         <button
           onClick={toggleMute}
           className="group relative shrink-0 p-[3px] opacity-75 transition hover:opacity-100"
-          style={{ color: silent ? "#555" : GREEN }}
+          style={{ color: silent ? "#555" : PURPLE }}
         >
           {silent ? <VolumeX size={13} /> : <Volume2 size={13} />}
           <Tip>{silent ? "unmute" : "mute"}</Tip>
         </button>
         <input
+          ref={volumeSliderRef}
           type="range"
           min={0}
           max={100}
@@ -289,7 +277,7 @@ function MusicPlayer() {
           onChange={onVolumeChange}
           className="h-[3px] flex-1 cursor-pointer appearance-none rounded-[2px]"
           style={{
-            background: `linear-gradient(90deg, ${GREEN} 0%, ${GREEN} ${volume}%, #1e1e1e ${volume}%)`,
+            background: `linear-gradient(90deg, ${PURPLE} 0%, ${PURPLE} ${volume}%, #1e1e1e ${volume}%)`,
           }}
         />
         <span className="min-w-[28px] text-right text-[9.5px]" style={{ color: "#444" }}>
@@ -301,111 +289,150 @@ function MusicPlayer() {
 }
 
 function App() {
-  return (
-    <div
-      className="min-h-screen overflow-hidden font-[JetBrains_Mono]"
-      style={{ background: BG, color: "#f0f0f0" }}
-    >
-      {/* Nav */}
-      <nav
-        className="fixed left-0 top-0 z-20 flex h-[52px] w-full items-center justify-between border-b px-6"
-        style={{ background: "#080808", borderColor: BORDER }}
-      >
-        <div className="text-[0.95rem] font-semibold tracking-tight">R-HASSAN</div>
-        <a
-          href="/"
-          className="text-[0.8rem] tracking-wide transition"
-          style={{ color: TEXT_MUTED }}
-        >
-          home
-        </a>
-      </nav>
+  const [showSplash, setShowSplash] = useState(true);
+  const audioRef = useRef(null);
 
-      {/* Background video */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0" style={{ background: BG }} />
-        <video autoPlay loop muted playsInline className="h-full w-full object-cover opacity-[0.35] blur-[20px]">
-          <source src="/background.mp4" type="video/mp4" />
-        </video>
+  const handleSplashClick = () => {
+    setShowSplash(false);
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+  };
+
+  return (
+    <>
+      {/* Splash Screen */}
+      {showSplash && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+          style={{ background: "#000000", color: "#f0f0f0" }}
+          onClick={handleSplashClick}
+        >
+          <motion.h1
+            className="text-6xl font-bold tracking-tight"
+            style={{ color: "#f0f0f0" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          >
+            R.HASSAN
+          </motion.h1>
+          <motion.p
+            className="mt-4 text-sm tracking-wide"
+            style={{ color: "#888" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 1 }}
+          >
+            Click anywhere to continue
+          </motion.p>
+        </div>
+      )}
+
+      <div
+        className="min-h-screen overflow-hidden font-[JetBrains_Mono]"
+        style={{ background: BG, color: "#f0f0f0" }}
+      >
+        {/* Nav - made slightly taller */}
+        <nav
+          className="fixed left-0 top-0 z-20 flex h-[72px] w-full items-center justify-between border-b px-6"
+          style={{ background: "#080808", borderColor: BORDER }}
+        >
+          <div className="text-[0.95rem] font-semibold tracking-tight">R-HASSAN</div>
+          <a
+            href="/"
+            className="text-[0.8rem] tracking-wide transition"
+            style={{ color: TEXT_MUTED }}
+          >
+            home
+          </a>
+        </nav>
+
+        {/* Background video - visible behind page */}
+        <div className="fixed inset-0 -z-10">
+          <div className="absolute inset-0" style={{ background: BG }} />
+          <video autoPlay loop muted playsInline className="h-full w-full object-cover opacity-[0.65] blur-[4px]">
+            <source src="/background.mp4" type="video/mp4" />
+          </video>
+        </div>
+
+        {/* Main */}
+        <main className="flex min-h-screen flex-col items-center justify-center gap-5 px-4 pb-10 pt-16">
+          <div className="flex w-full max-w-[340px] flex-col items-center gap-3">
+            {/* Card */}
+            <div
+              className="flex w-full flex-col items-center gap-3 rounded-xl border p-5"
+              style={{ background: CARD_BG, borderColor: BORDER }}
+            >
+              {/* Badge row: (empty badge slot) - removed view count */}
+              <div className="flex w-full items-center justify-between">
+                <div />
+                <div />
+              </div>
+
+              {/* Avatar */}
+              <div
+                className="relative shrink-0 rounded-full p-[2px]"
+                style={{
+                  width: "clamp(72px, 18vw, 88px)",
+                  height: "clamp(72px, 18vw, 88px)",
+                  background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE})`,
+                }}
+              >
+                <img
+                  src={PROFILE.avatar}
+                  alt={PROFILE.displayName}
+                  className="h-full w-full rounded-full object-cover"
+                />
+                <StatusDot status={PROFILE.status} />
+              </div>
+
+              {/* Identity */}
+              <div className="flex flex-col items-center gap-1 text-center">
+                <div className="text-[clamp(0.95rem,3vw,1.1rem)] font-semibold tracking-tight">
+                  {PROFILE.displayName}
+                </div>
+                <div className="text-[0.78rem] tracking-wide" style={{ color: PURPLE }}>
+                  {PROFILE.handle}
+                </div>
+              </div>
+
+              <p className="max-w-[260px] text-center text-[0.74rem] leading-[1.75]" style={{ color: TEXT_MUTED }}>
+                {PROFILE.bio}
+              </p>
+
+              <div className="h-px w-full" style={{ background: BORDER }} />
+
+              {/* Links */}
+              <div className="flex w-full flex-col gap-2">
+                {SOCIALS.map(({ label, href, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-[0.65rem] rounded-[7px] border px-[0.9rem] py-[0.6rem] text-[0.75rem] tracking-wide transition"
+                    style={{ background: "#131313", borderColor: BORDER, color: "#c0c0c0" }}
+                  >
+                    <Icon size={14} style={{ color: PURPLE, opacity: 0.75 }} />
+                    {label}
+                  </a>
+                ))}
+              </div>
+
+              {/* Removed LikeButton */}
+              <div />
+            </div>
+
+            {/* Music player */}
+            <MusicPlayer />
+          </div>
+        </main>
       </div>
 
-      {/* Main */}
-      <main className="flex min-h-screen flex-col items-center justify-center gap-5 px-4 pb-10 pt-16">
-        <div className="flex w-full max-w-[340px] flex-col items-center gap-3">
-          {/* Card */}
-          <div
-            className="flex w-full flex-col items-center gap-3 rounded-xl border p-5"
-            style={{ background: CARD_BG, borderColor: BORDER }}
-          >
-            {/* Badge row: (empty badge slot) + view count */}
-            <div className="flex w-full items-center justify-between">
-              <div />
-              <div className="flex items-center gap-[5px]" style={{ color: TEXT_DIM }}>
-                <Eye size={11} />
-                <span className="text-[0.68rem] tracking-wide">{PROFILE.views}</span>
-              </div>
-            </div>
-
-            {/* Avatar */}
-            <div
-              className="relative shrink-0 rounded-full p-[2px]"
-              style={{
-                width: "clamp(72px, 18vw, 88px)",
-                height: "clamp(72px, 18vw, 88px)",
-                background: `linear-gradient(135deg, ${GREEN}, ${GREEN})`,
-              }}
-            >
-              <img
-                src={PROFILE.avatar}
-                alt={PROFILE.displayName}
-                className="h-full w-full rounded-full object-cover"
-              />
-              <StatusDot status={PROFILE.status} />
-            </div>
-
-            {/* Identity */}
-            <div className="flex flex-col items-center gap-1 text-center">
-              <div className="text-[clamp(0.95rem,3vw,1.1rem)] font-semibold tracking-tight">
-                {PROFILE.displayName}
-              </div>
-              <div className="text-[0.78rem] tracking-wide" style={{ color: GREEN }}>
-                {PROFILE.handle}
-              </div>
-            </div>
-
-            <p className="max-w-[260px] text-center text-[0.74rem] leading-[1.75]" style={{ color: TEXT_MUTED }}>
-              {PROFILE.bio}
-            </p>
-
-            <div className="h-px w-full" style={{ background: BORDER }} />
-
-            {/* Links */}
-            <div className="flex w-full flex-col gap-2">
-              {SOCIALS.map(({ label, href, icon: Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-[0.65rem] rounded-[7px] border px-[0.9rem] py-[0.6rem] text-[0.75rem] tracking-wide transition"
-                  style={{ background: "#131313", borderColor: BORDER, color: "#c0c0c0" }}
-                >
-                  <Icon size={14} style={{ color: GREEN, opacity: 0.75 }} />
-                  {label}
-                </a>
-              ))}
-            </div>
-
-            <div className="flex w-full justify-end">
-              <LikeButton />
-            </div>
-          </div>
-
-          {/* Music player */}
-          <MusicPlayer />
-        </div>
-      </main>
-    </div>
+      {/* Hidden audio element for splash screen */}
+      <audio ref={audioRef} src={TRACK.src} loop />
+    </>
   );
 }
 
