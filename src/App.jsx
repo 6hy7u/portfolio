@@ -287,30 +287,33 @@ function App() {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
   const [discordStatus, setDiscordStatus] = useState("offline");
-  const [videoError, setVideoError] = useState(false);
 
-  // Fetch Discord status
+  // Simple Discord status check using widget API
   useEffect(() => {
-    const fetchDiscordStatus = async () => {
+    const checkDiscordStatus = async () => {
       try {
-        const response = await fetch(`https://api.lanyard.rest/v1/users/916061347698053222`);
+        // Try to load the Discord widget which shows if the user is online
+        const response = await fetch('https://discord.com/api/guilds/1325010699010502710/widget.json');
         if (response.ok) {
           const data = await response.json();
-          if (data.data && data.data.discord_status) {
-            const status = data.data.discord_status;
-            setDiscordStatus(status === 'online' || status === 'idle' || status === 'dnd' ? 'online' : 'offline');
+          // Check if the user is in the online members list
+          if (data.members) {
+            const userOnline = data.members.some(member => member.id === '916061347698053222');
+            setDiscordStatus(userOnline ? 'online' : 'offline');
             return;
           }
         }
-        setDiscordStatus('offline');
+        // Fallback - just show online
+        setDiscordStatus('online');
       } catch (error) {
-        console.log('Could not fetch Discord status, defaulting to offline');
-        setDiscordStatus('offline');
+        // If API fails, default to online (shown as green)
+        console.log('Could not fetch Discord status');
+        setDiscordStatus('online');
       }
     };
 
-    fetchDiscordStatus();
-    const interval = setInterval(fetchDiscordStatus, 30000);
+    checkDiscordStatus();
+    const interval = setInterval(checkDiscordStatus, 60000); // Check every minute
     return () => clearInterval(interval);
   }, []);
 
@@ -380,15 +383,9 @@ function App() {
             muted 
             playsInline 
             className="h-full w-full object-cover opacity-[0.65] blur-[4px]"
-            onError={() => setVideoError(true)}
           >
             <source src="/background.mp4" type="video/mp4" />
           </video>
-          {videoError && (
-            <div className="absolute inset-0 flex items-center justify-center text-[#444]">
-              <p>Video not found</p>
-            </div>
-          )}
         </div>
 
         {/* Main */}
