@@ -104,7 +104,7 @@ function Equalizer({ active }) {
 
 function MusicPlayer({ audioRef, playing, setPlaying }) {
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(35); // Changed to 35
+  const [volume, setVolume] = useState(35);
   const [progress, setProgress] = useState(0);
   const [curTime, setCurTime] = useState("0:00");
   const [totalTime, setTotalTime] = useState("0:00");
@@ -404,15 +404,15 @@ function App() {
           className="fixed left-0 top-0 z-20 flex h-[72px] w-full items-center justify-between border-b px-6"
           style={{ background: "rgba(8,8,8,0.9)", borderColor: BORDER }}
         >
-          {/* Animated site title - smooth sliding transition without jumping */}
+          {/* Animated site title - smooth sliding transition */}
           <div className="text-[0.95rem] font-semibold tracking-tight overflow-hidden whitespace-nowrap relative">
             <motion.div
               key={titleIndex}
-              initial={{ x: 30, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ 
-                duration: 0.4,
-                ease: "easeInOut"
+                duration: 0.5,
+                ease: "easeOut"
               }}
               className="w-full"
             >
@@ -428,7 +428,7 @@ function App() {
           </a>
         </nav>
 
-        {/* Background video - NO WHITE OVERLAY */}
+        {/* Background video - NO WHITE OVERLAY, removed opacity */}
         <div className="fixed inset-0 z-0">
           <video
             autoPlay
@@ -436,7 +436,7 @@ function App() {
             muted
             playsInline
             className="absolute inset-0 h-full w-full object-cover"
-            style={{ opacity: 0.65, filter: 'blur(4px)' }}
+            style={{ filter: 'blur(4px)' }}
           >
             <source src="/background.mp4" type="video/mp4" />
           </video>
