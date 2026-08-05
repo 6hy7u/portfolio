@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Helmet } from 'react-helmet-async';
 import {
   Gamepad2,
   MessageCircle,
@@ -43,8 +42,8 @@ const SOCIALS = [
 ];
 
 const TRACK = {
-  title: "track title",
-  artist: "artist name",
+  title: "shotgun.",
+  artist: "overtonight",
   src: "/music.mp3",
   art: "/cover.png",
 };
@@ -347,7 +346,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Animate title through text states
+  // Animate title through text states with smooth transitions
   useEffect(() => {
     const timer = setTimeout(() => {
       setTitleIndex((prev) => (prev + 1) % textStates.length);
@@ -410,16 +409,21 @@ function App() {
           className="fixed left-0 top-0 z-20 flex h-[72px] w-full items-center justify-between border-b px-6"
           style={{ background: "rgba(8,8,8,0.9)", borderColor: BORDER }}
         >
-          {/* Animated site title */}
-          <motion.div
-            className="text-[0.95rem] font-semibold tracking-tight overflow-hidden whitespace-nowrap"
-            key={titleIndex}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {textStates[titleIndex]}
-          </motion.div>
+          {/* Animated site title - smooth sliding transition */}
+          <div className="text-[0.95rem] font-semibold tracking-tight overflow-hidden whitespace-nowrap relative">
+            <motion.div
+              key={titleIndex}
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -50, opacity: 0 }}
+              transition={{ 
+                duration: 0.3,
+                ease: "easeInOut"
+              }}
+            >
+              {textStates[titleIndex]}
+            </motion.div>
+          </div>
           <a
             href="/"
             className="text-[0.8rem] tracking-wide transition"
@@ -437,7 +441,7 @@ function App() {
             muted
             playsInline
             className="h-full w-full object-cover"
-            style={{  filter: 'blur(4px)' }}
+            style={{ opacity: 0.65, filter: 'blur(4px)' }}
           >
             <source src="/background.mp4" type="video/mp4" />
           </video>
