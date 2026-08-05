@@ -286,34 +286,27 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
-  const [discordStatus, setDiscordStatus] = useState("offline");
+  const [discordStatus, setDiscordStatus] = useState("online");
 
-  // Simple Discord status check using widget API
+  // Simple Discord status check
   useEffect(() => {
     const checkDiscordStatus = async () => {
       try {
-        // Try to load the Discord widget which shows if the user is online
-        const response = await fetch('https://discord.com/api/guilds/1325010699010502710/widget.json');
+        // Try to check if user is online via Discord API
+        const response = await fetch('https://discord.com/api/users/916061347698053222');
         if (response.ok) {
-          const data = await response.json();
-          // Check if the user is in the online members list
-          if (data.members) {
-            const userOnline = data.members.some(member => member.id === '916061347698053222');
-            setDiscordStatus(userOnline ? 'online' : 'offline');
-            return;
-          }
+          setDiscordStatus('online');
+        } else {
+          setDiscordStatus('offline');
         }
-        // Fallback - just show online
-        setDiscordStatus('online');
       } catch (error) {
-        // If API fails, default to online (shown as green)
-        console.log('Could not fetch Discord status');
+        // If API fails, default to online
         setDiscordStatus('online');
       }
     };
 
     checkDiscordStatus();
-    const interval = setInterval(checkDiscordStatus, 60000); // Check every minute
+    const interval = setInterval(checkDiscordStatus, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -324,6 +317,9 @@ function App() {
       setPlaying(true);
     }
   };
+
+  // Status colors for the ring
+  const statusColor = discordStatus === 'online' ? '#3ecf6a' : '#444';
 
   return (
     <>
@@ -402,13 +398,14 @@ function App() {
                 <div />
               </div>
 
-              {/* Avatar */}
+              {/* Avatar with status ring */}
               <div
                 className="relative shrink-0 rounded-full p-[2px]"
                 style={{
                   width: "clamp(72px, 18vw, 88px)",
                   height: "clamp(72px, 18vw, 88px)",
-                  background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE})`,
+                  background: `conic-gradient(from 0deg, ${statusColor}, ${statusColor})`,
+                  boxShadow: `0 0 20px ${statusColor === '#3ecf6a' ? 'rgba(62, 207, 106, 0.3)' : 'rgba(68, 68, 68, 0.3)'}`,
                 }}
               >
                 <img
