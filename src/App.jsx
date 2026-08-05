@@ -287,26 +287,43 @@ function App() {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
   const [discordStatus, setDiscordStatus] = useState("online");
+  const [statusError, setStatusError] = useState(null);
 
-  // Simple Discord status check
+  // Fetch real Discord status using Lanyard API
   useEffect(() => {
-    const checkDiscordStatus = async () => {
+    const fetchDiscordStatus = async () => {
       try {
-        // Try to check if user is online via Discord API
-        const response = await fetch('https://discord.com/api/users/916061347698053222');
-        if (response.ok) {
-          setDiscordStatus('online');
-        } else {
+        const response = await fetch('https://api.lanyard.rest/v1/users/916061347698053222');
+        
+        if (response.status === 404) {
+          setStatusError('Join the Lanyard Discord server to show status');
           setDiscordStatus('offline');
+          return;
         }
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.discord_status) {
+            setStatusError(null);
+            const status = data.data.discord_status;
+            if (status === 'online' || status === 'idle' || status === 'dnd') {
+              setDiscordStatus('online');
+            } else {
+              setDiscordStatus('offline');
+            }
+            return;
+          }
+        }
+        
+        setDiscordStatus('offline');
       } catch (error) {
-        // If API fails, default to online
-        setDiscordStatus('online');
+        console.log('Error connecting to Lanyard API');
+        setDiscordStatus('offline');
       }
     };
 
-    checkDiscordStatus();
-    const interval = setInterval(checkDiscordStatus, 60000);
+    fetchDiscordStatus();
+    const interval = setInterval(fetchDiscordStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -318,7 +335,6 @@ function App() {
     }
   };
 
-  // Status colors for the ring
   const statusColor = discordStatus === 'online' ? '#3ecf6a' : '#444';
 
   return (
@@ -424,6 +440,11 @@ function App() {
                 <div className="text-[0.78rem] tracking-wide" style={{ color: PURPLE }}>
                   {PROFILE.handle}
                 </div>
+                {statusError && (
+                  <div className="text-[0.6rem] tracking-wide" style={{ color: '#888' }}>
+                    {statusError}
+                  </div>
+                )}
               </div>
 
               <p className="max-w-[260px] text-center text-[0.74rem] leading-[1.75]" style={{ color: TEXT_MUTED }}>
