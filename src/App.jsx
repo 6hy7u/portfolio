@@ -346,7 +346,12 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Animate title through text states with smooth transitions
+  // Update title in browser tab
+  useEffect(() => {
+    document.title = textStates[titleIndex];
+  }, [titleIndex]);
+
+  // Animate title through text states
   useEffect(() => {
     const timer = setTimeout(() => {
       setTitleIndex((prev) => (prev + 1) % textStates.length);
@@ -404,20 +409,11 @@ function App() {
           className="fixed left-0 top-0 z-20 flex h-[72px] w-full items-center justify-between border-b px-6"
           style={{ background: "rgba(8,8,8,0.9)", borderColor: BORDER }}
         >
-          {/* Animated site title - smooth sliding transition */}
-          <div className="text-[0.95rem] font-semibold tracking-tight overflow-hidden whitespace-nowrap relative">
-            <motion.div
-              key={titleIndex}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ 
-                duration: 0.5,
-                ease: "easeOut"
-              }}
-              className="w-full"
-            >
+          {/* Site title - smooth text change without jumping */}
+          <div className="text-[0.95rem] font-semibold tracking-tight overflow-hidden whitespace-nowrap">
+            <span className="inline-block transition-all duration-300 ease-in-out">
               {textStates[titleIndex]}
-            </motion.div>
+            </span>
           </div>
           <a
             href="/"
@@ -428,7 +424,7 @@ function App() {
           </a>
         </nav>
 
-        {/* Background video - NO WHITE OVERLAY, removed opacity */}
+        {/* Background video */}
         <div className="fixed inset-0 z-0">
           <video
             autoPlay
