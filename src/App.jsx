@@ -351,11 +351,11 @@ function App() {
     document.title = textStates[titleIndex];
   }, [titleIndex]);
 
-  // Animate title through text states
+  // Animate title through text states - faster
   useEffect(() => {
     const timer = setTimeout(() => {
       setTitleIndex((prev) => (prev + 1) % textStates.length);
-    }, 300);
+    }, 200); // Changed from 300ms to 200ms for faster transitions
 
     return () => clearTimeout(timer);
   }, [titleIndex]);
@@ -409,9 +409,9 @@ function App() {
           className="fixed left-0 top-0 z-20 flex h-[72px] w-full items-center justify-between border-b px-6"
           style={{ background: "rgba(8,8,8,0.9)", borderColor: BORDER }}
         >
-          {/* Site title - smooth text change without jumping */}
+          {/* Site title - faster transition */}
           <div className="text-[0.95rem] font-semibold tracking-tight overflow-hidden whitespace-nowrap">
-            <span className="inline-block transition-all duration-300 ease-in-out">
+            <span className="inline-block transition-all duration-150 ease-in-out">
               {textStates[titleIndex]}
             </span>
           </div>
