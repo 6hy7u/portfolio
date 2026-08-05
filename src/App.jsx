@@ -136,7 +136,7 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
       audio.removeEventListener("durationchange", onDuration);
       audio.removeEventListener("ended", onEnd);
     };
-  }, [audioRef, setPlaying]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [audioRef, setPlaying]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -287,14 +287,13 @@ function App() {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
   const [discordStatus, setDiscordStatus] = useState("offline");
+  const [videoError, setVideoError] = useState(false);
 
-  // Fetch Discord status using a more reliable method
+  // Fetch Discord status
   useEffect(() => {
-    // Try multiple methods to get Discord status
     const fetchDiscordStatus = async () => {
       try {
-        // Using a different public API that works better
-        const response = await fetch('https://api.lanyard.rest/v1/users/916061347698053222D');
+        const response = await fetch(`https://api.lanyard.rest/v1/users/916061347698053222`);
         if (response.ok) {
           const data = await response.json();
           if (data.data && data.data.discord_status) {
@@ -303,14 +302,6 @@ function App() {
             return;
           }
         }
-        // Fallback: try a different API
-        const fallbackResponse = await fetch('https://discord.com/api/users/916061347698053222');
-        if (fallbackResponse.ok) {
-          // If we can fetch user data, they're online
-          setDiscordStatus('online');
-          return;
-        }
-        // If all fails, default to showing as offline
         setDiscordStatus('offline');
       } catch (error) {
         console.log('Could not fetch Discord status, defaulting to offline');
@@ -319,7 +310,6 @@ function App() {
     };
 
     fetchDiscordStatus();
-    // Refresh status every 30 seconds
     const interval = setInterval(fetchDiscordStatus, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -390,9 +380,15 @@ function App() {
             muted 
             playsInline 
             className="h-full w-full object-cover opacity-[0.65] blur-[4px]"
+            onError={() => setVideoError(true)}
           >
             <source src="/background.mp4" type="video/mp4" />
           </video>
+          {videoError && (
+            <div className="absolute inset-0 flex items-center justify-center text-[#444]">
+              <p>Video not found</p>
+            </div>
+          )}
         </div>
 
         {/* Main */}
@@ -472,31 +468,51 @@ function App() {
       {/* Single audio element for everything */}
       <audio ref={audioRef} src={TRACK.src} loop />
 
-      {/* Add global styles for volume slider */}
-      <style jsx>{`
+      {/* Global styles for volume slider */}
+      <style>{`
+        .volume-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          height: 3px;
+          border-radius: 2px;
+          outline: none;
+          background: transparent;
+        }
+        
         .volume-slider::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
           background: ${PURPLE};
           cursor: pointer;
           border: 2px solid #1e1e1e;
-          box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);
+          box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+          margin-top: -5.5px;
+          transition: all 0.2s;
         }
+        
+        .volume-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
+        }
+        
         .volume-slider::-moz-range-thumb {
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
           background: ${PURPLE};
           cursor: pointer;
           border: 2px solid #1e1e1e;
         }
+        
         .volume-slider::-webkit-slider-runnable-track {
           height: 3px;
           border-radius: 2px;
+          background: transparent;
         }
+        
         .volume-slider::-moz-range-track {
           height: 3px;
           border-radius: 2px;
