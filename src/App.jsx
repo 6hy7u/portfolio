@@ -174,7 +174,6 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
     const ratio = Math.min(Math.max(clickX / rect.width, 0), 1);
     const newTime = ratio * audio.duration;
     audio.currentTime = newTime;
-    // Update progress immediately
     setProgress(ratio);
     setCurTime(fmt(newTime));
   };
@@ -270,7 +269,7 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
           max={100}
           value={volume}
           onChange={onVolumeChange}
-          className="h-[3px] flex-1 cursor-pointer appearance-none rounded-[2px]"
+          className="volume-slider h-[3px] flex-1 cursor-pointer appearance-none rounded-[2px]"
           style={{
             background: `linear-gradient(90deg, ${PURPLE} 0%, ${PURPLE} ${volume}%, #1e1e1e ${volume}%)`,
           }}
@@ -289,20 +288,33 @@ function App() {
   const audioRef = useRef(null);
   const [discordStatus, setDiscordStatus] = useState("offline");
 
-  // Fetch Discord status
+  // Fetch Discord status using a more reliable method
   useEffect(() => {
+    // Try multiple methods to get Discord status
     const fetchDiscordStatus = async () => {
       try {
-        // Using Discord's public API endpoint for widgets
-        const response = await fetch('https://api.lanyard.rest/v1/users/916061347698053222');
+        // Using a different public API that works better
+        const response = await fetch('https://api.lanyard.rest/v1/users/916061347698053222D');
         if (response.ok) {
           const data = await response.json();
           if (data.data && data.data.discord_status) {
-            setDiscordStatus(data.data.discord_status);
+            const status = data.data.discord_status;
+            setDiscordStatus(status === 'online' || status === 'idle' || status === 'dnd' ? 'online' : 'offline');
+            return;
           }
         }
+        // Fallback: try a different API
+        const fallbackResponse = await fetch('https://discord.com/api/users/916061347698053222');
+        if (fallbackResponse.ok) {
+          // If we can fetch user data, they're online
+          setDiscordStatus('online');
+          return;
+        }
+        // If all fails, default to showing as offline
+        setDiscordStatus('offline');
       } catch (error) {
-        console.log('Could not fetch Discord status');
+        console.log('Could not fetch Discord status, defaulting to offline');
+        setDiscordStatus('offline');
       }
     };
 
@@ -378,10 +390,8 @@ function App() {
             muted 
             playsInline 
             className="h-full w-full object-cover opacity-[0.65] blur-[4px]"
-            style={{ minHeight: '100vh', minWidth: '100vw' }}
           >
             <source src="/background.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
           </video>
         </div>
 
@@ -413,7 +423,7 @@ function App() {
                   alt={PROFILE.displayName}
                   className="h-full w-full rounded-full object-cover"
                 />
-                <StatusDot status={discordStatus === "online" ? "online" : "offline"} />
+                <StatusDot status={discordStatus} />
               </div>
 
               {/* Identity */}
@@ -461,6 +471,38 @@ function App() {
 
       {/* Single audio element for everything */}
       <audio ref={audioRef} src={TRACK.src} loop />
+
+      {/* Add global styles for volume slider */}
+      <style jsx>{`
+        .volume-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: ${PURPLE};
+          cursor: pointer;
+          border: 2px solid #1e1e1e;
+          box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);
+        }
+        .volume-slider::-moz-range-thumb {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: ${PURPLE};
+          cursor: pointer;
+          border: 2px solid #1e1e1e;
+        }
+        .volume-slider::-webkit-slider-runnable-track {
+          height: 3px;
+          border-radius: 2px;
+        }
+        .volume-slider::-moz-range-track {
+          height: 3px;
+          border-radius: 2px;
+          background: transparent;
+        }
+      `}</style>
     </>
   );
 }
