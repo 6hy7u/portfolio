@@ -287,7 +287,6 @@ function App() {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
   const [discordStatus, setDiscordStatus] = useState("online");
-  const [statusError, setStatusError] = useState(null);
 
   // Fetch real Discord status using Lanyard API
   useEffect(() => {
@@ -295,16 +294,9 @@ function App() {
       try {
         const response = await fetch('https://api.lanyard.rest/v1/users/916061347698053222');
         
-        if (response.status === 404) {
-          setStatusError('Join the Lanyard Discord server to show status');
-          setDiscordStatus('offline');
-          return;
-        }
-        
         if (response.ok) {
           const data = await response.json();
           if (data.data && data.data.discord_status) {
-            setStatusError(null);
             const status = data.data.discord_status;
             if (status === 'online' || status === 'idle' || status === 'dnd') {
               setDiscordStatus('online');
@@ -314,7 +306,6 @@ function App() {
             return;
           }
         }
-        
         setDiscordStatus('offline');
       } catch (error) {
         console.log('Error connecting to Lanyard API');
@@ -386,8 +377,8 @@ function App() {
           </a>
         </nav>
 
-        {/* Background video - visible behind page */}
-        <div className="fixed inset-0 -z-10">
+        {/* Background video - now properly layered */}
+        <div className="fixed inset-0 z-0">
           <div className="absolute inset-0" style={{ background: BG }} />
           <video 
             autoPlay 
@@ -400,8 +391,8 @@ function App() {
           </video>
         </div>
 
-        {/* Main */}
-        <main className="flex min-h-screen flex-col items-center justify-center gap-5 px-4 pb-10 pt-16">
+        {/* Main content - above the video */}
+        <main className="relative z-10 flex min-h-screen flex-col items-center justify-center gap-5 px-4 pb-10 pt-16">
           <div className="flex w-full max-w-[340px] flex-col items-center gap-3">
             {/* Card */}
             <div
@@ -440,11 +431,6 @@ function App() {
                 <div className="text-[0.78rem] tracking-wide" style={{ color: PURPLE }}>
                   {PROFILE.handle}
                 </div>
-                {statusError && (
-                  <div className="text-[0.6rem] tracking-wide" style={{ color: '#888' }}>
-                    {statusError}
-                  </div>
-                )}
               </div>
 
               <p className="max-w-[260px] text-center text-[0.74rem] leading-[1.75]" style={{ color: TEXT_MUTED }}>
