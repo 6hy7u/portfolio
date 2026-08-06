@@ -43,7 +43,12 @@ export async function onRequest(context) {
     const recentData = await recentResponse.json();
 
     const player = currentData.response.players[0];
+    
     return new Response(
+  JSON.stringify({
+    current: currentData,
+    recent: recentData
+  }, null, 2),
   {
     headers: {
       "Content-Type": "application/json",
