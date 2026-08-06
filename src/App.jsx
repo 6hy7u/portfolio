@@ -288,7 +288,7 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   );
 }
 
-// ⬇️ Steam Widget - ONLY calls your Cloudflare Worker, NOT Steam directly!
+// ⬇️ Steam Widget - UPDATED with View on Steam button
 function SteamWidget({ steamId }) {
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -391,6 +391,7 @@ function SteamWidget({ steamId }) {
           }}
         />
       )}
+      
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-[#f0f0f0]">
@@ -404,7 +405,6 @@ function SteamWidget({ steamId }) {
           </span>
         </div>
         
-        {/* ✅ FIXED: Clean conditional rendering for game status */}
         {gameData.isPlaying ? (
           <div className="text-xs" style={{ color: TEXT_MUTED }}>
             Currently playing
@@ -414,6 +414,21 @@ function SteamWidget({ steamId }) {
             Last played: {gameData.lastPlayed}
           </div>
         )}
+
+        {/* ✅ NEW: View on Steam Button */}
+        <a
+          href={`https://store.steampowered.com/app/${gameData.appid}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-[10px] tracking-wide transition hover:opacity-80"
+          style={{
+            background: "#131313",
+            borderColor: BORDER,
+            color: PURPLE,
+          }}
+        >
+          {gameData.isPlaying ? "Join Game Page" : "View Game"}
+        </a>
       </div>
     </div>
   );
