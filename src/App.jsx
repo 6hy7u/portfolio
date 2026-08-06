@@ -304,20 +304,25 @@ function SteamWidget({ steamId }) {
         
         const data = await response.json();
         
-        if (data.response && data.response.games && data.response.games.length > 0) {
-          const game = data.response.games[0];
-          const playtimeHours = Math.round(game.playtime_2weeks / 60);
-          
-          setGameData({
-            name: game.name,
-            playtime: playtimeHours,
-            appid: game.appid,
-            icon: `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`,
-            lastPlayed: 'Recently'
-          });
-        } else {
-          setGameData(null);
-        }
+        if (data.playing) {
+  setGameData({
+    name: data.name,
+    appid: data.appid,
+    playtime: null,
+    lastPlayed: null,
+    isPlaying: true,
+    icon: `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${data.appid}/icon.jpg`,
+  });
+} else if (data.game) {
+  setGameData({
+    name: data.game.name,
+    appid: data.game.appid,
+    playtime: Math.round(data.game.playtime_2weeks / 60),
+    lastPlayed: "Recently",
+    isPlaying: false,
+    icon: `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`,
+  });
+}
         setLoading(false);
         setError(false);
       } catch (error) {
@@ -374,20 +379,34 @@ function SteamWidget({ steamId }) {
           }}
         />
       )}
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-[#f0f0f0]">{gameData.name}</span>
-          <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: PURPLE_DARK, color: PURPLE }}>
-            NOW PLAYING
-          </span>
-        </div>
-        <div className="text-xs" style={{ color: TEXT_MUTED }}>
-          {gameData.playtime} hrs played in last 2 weeks
-        </div>
-        <div className="text-xs" style={{ color: '#555' }}>
-          Last played: {gameData.lastPlayed}
-        </div>
-      </div>
+      <div className="flex items-center gap-2">
+  <span className="text-xs font-semibold text-[#f0f0f0]">
+    {gameData.name}
+  </span>
+
+  <span
+    className="text-[8px] px-1.5 py-0.5 rounded"
+    style={{ background: PURPLE_DARK, color: PURPLE }}
+  >
+    {gameData.isPlaying ? "NOW PLAYING" : "LAST PLAYED"}
+  </span>
+</div>
+
+{gameData.isPlaying ? (
+  <div className="text-xs" style={{ color: TEXT_MUTED }}>
+    Currently playing
+  </div>
+) : (
+  <>
+    <div className="text-xs" style={{ color: TEXT_MUTED }}>
+      {gameData.playtime} hrs played in last 2 weeks
+    </div>
+
+    <div className="text-xs" style={{ color: "#555" }}>
+      Last played: {gameData.lastPlayed}
+    </div>
+  </>
+)}
     </div>
   );
 }
