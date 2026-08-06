@@ -34,12 +34,17 @@ export async function onRequest(context) {
       }
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Failed to fetch Steam data' }), {
+  return new Response(
+    JSON.stringify({
+      error: error.message,
+      stack: error.stack,
+    }),
+    {
       status: 500,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
 }
