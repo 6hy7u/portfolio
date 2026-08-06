@@ -5,28 +5,18 @@ export async function onRequest(context) {
   const steamId = url.searchParams.get("steamid");
 
   if (!steamId) {
-    return new Response(
-      JSON.stringify({ error: "Missing Steam ID" }),
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+    return Response.json(
+      { error: "Missing Steam ID" },
+      { status: 400 }
     );
   }
 
   const apiKey = env.STEAM_API_KEY;
 
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: "Missing API key" }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+    return Response.json(
+      { error: "Missing API key" },
+      { status: 500 }
     );
   }
 
@@ -42,50 +32,46 @@ export async function onRequest(context) {
     const currentData = await currentResponse.json();
     const recentData = await recentResponse.json();
 
-    const player = currentData.response.players[0];
+    const player = currentData.response.players?.[0];
 
-    return new Response(
-  JSON.stringify({
-    current: currentData,
-    recent: recentData
-  }, null, 2),
-  {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }
-);
-
+    // Currently playing
     if (player?.gameid) {
-      return new Response(
-        JSON.stringify({
-          playing: true,
-          appid: player.gameid,
-          name: player.gameextrainfo,
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return Response.json({
+        playing: true,
+        appid: player.gameid,
+        name: player.gameextrainfo,
+      });
     }
 
+    // Recently played (ignore Spacewar)
     const game = recentData.response.games?.find(
-  (game) => game.appid !== 480
-);
+      (game) => game.appid !== 480
+    );
 
-    
+    if (game) {
+      return Response.json({
+        playing: false,
+        game: {
+          name: game.name,
+          appid: game.appid,
+          playtime_2weeks: game.playtime_2weeks,
+          img_icon_url: game.img_icon_url,
+        },
+      });
+    }
+
+    return Response.json({
+      playing: false,
+      game: null,
+    });
+
   } catch (error) {
-    return new Response(
-      JSON.stringify({
+    return Response.json(
+      {
         error: error.message,
-      }),
+      },
       {
         status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
       }
     );
   }
