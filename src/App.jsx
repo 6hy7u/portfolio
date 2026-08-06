@@ -317,10 +317,14 @@ function SteamWidget({ steamId }) {
   setGameData({
     name: data.game.name,
     appid: data.game.appid,
-    playtime: Math.round(data.game.playtime_2weeks / 60),
+    playtime: data.game.playtime_2weeks
+      ? Math.round(data.game.playtime_2weeks / 60)
+      : 0,
     lastPlayed: "Recently",
     isPlaying: false,
-    icon: `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`,
+    icon: data.game.img_icon_url
+      ? `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`
+      : null,
   });
 }
         setLoading(false);
@@ -399,8 +403,10 @@ function SteamWidget({ steamId }) {
 ) : (
   <>
     <div className="text-xs" style={{ color: TEXT_MUTED }}>
-      {gameData.playtime} hrs played in last 2 weeks
-    </div>
+  {gameData.isPlaying
+    ? "Currently playing"
+    : `${gameData.playtime} hrs played in last 2 weeks`}
+</div>
 
     <div className="text-xs" style={{ color: "#555" }}>
       Last played: {gameData.lastPlayed}
