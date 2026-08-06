@@ -48,7 +48,7 @@ const TRACK = {
   art: "/cover.png",
 };
 
-// ⬇️ ONLY EDIT THIS - Your Steam ID (already correct)
+// ONLY your Steam ID - NO API KEY HERE!
 const STEAM_ID = "76561199491396349";
 // ---------------------------------------------------------------------------
 
@@ -285,7 +285,7 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   );
 }
 
-// ⬇️ Steam Widget - Updated to use Cloudflare Worker
+// ⬇️ Steam Widget - ONLY calls your Cloudflare Worker, NOT Steam directly!
 function SteamWidget({ steamId }) {
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -295,7 +295,7 @@ function SteamWidget({ steamId }) {
     const fetchSteamData = async () => {
       try {
         setLoading(true);
-        // ⬇️ This calls your Cloudflare Worker (no API key needed!)
+        // ⬇️ This calls YOUR Cloudflare Worker - NO direct Steam API call!
         const response = await fetch(`/api/steam?steamid=${steamId}`);
         
         if (!response.ok) {
@@ -617,7 +617,7 @@ function App() {
               <div />
             </div>
 
-            {/* ⬇️ Steam Widget - Already set up correctly */}
+            {/* Steam Widget */}
             <SteamWidget steamId={STEAM_ID} />
 
             {/* Music player */}
