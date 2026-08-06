@@ -44,7 +44,6 @@ export async function onRequest(context) {
 
     const player = currentData.response.players[0];
     return new Response(
-  JSON.stringify(player, null, 2),
   {
     headers: {
       "Content-Type": "application/json",
