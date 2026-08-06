@@ -22,7 +22,7 @@ import {
 // ---- Edit these to your own info -----------------------------------------
 const PROFILE = {
   displayName: "R.H",
-  handle: "@r-hassan",
+  handle: "@r.hassan",
   bio: "Made this for fun",
   avatar: "/profile.png",
   status: "online", // "online" | "offline"
