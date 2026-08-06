@@ -48,9 +48,8 @@ const TRACK = {
   art: "/cover.png",
 };
 
-// Steam API configuration
-const STEAM_API_KEY = "5D1270BD73861F88A946B6F1855804DF"; // Get from https://steamcommunity.com/dev/apikey
-const STEAM_ID = "76561199491396349"; // Your Steam ID
+// ⬇️ ONLY EDIT THIS - Your Steam ID (already correct)
+const STEAM_ID = "76561199491396349";
 // ---------------------------------------------------------------------------
 
 // Design tokens, matched to the reference palette
@@ -286,8 +285,8 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   );
 }
 
-// Steam Widget Component
-function SteamWidget({ steamId, apiKey }) {
+// ⬇️ Steam Widget - Updated to use Cloudflare Worker
+function SteamWidget({ steamId }) {
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -296,9 +295,8 @@ function SteamWidget({ steamId, apiKey }) {
     const fetchSteamData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${apiKey}&steamid=${steamId}&format=json&count=1`
-        );
+        // ⬇️ This calls your Cloudflare Worker (no API key needed!)
+        const response = await fetch(`/api/steam?steamid=${steamId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch Steam data');
@@ -310,18 +308,11 @@ function SteamWidget({ steamId, apiKey }) {
           const game = data.response.games[0];
           const playtimeHours = Math.round(game.playtime_2weeks / 60);
           
-          // Get game details for icon
-          const gameDetailsResponse = await fetch(
-            `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${apiKey}&appid=${game.appid}&format=json`
-          );
-          const gameDetails = await gameDetailsResponse.json();
-          
           setGameData({
             name: game.name,
             playtime: playtimeHours,
             appid: game.appid,
             icon: `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`,
-            iconLarge: `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${game.appid}/${game.img_logo_url}.jpg`,
             lastPlayed: 'Recently'
           });
         } else {
@@ -336,17 +327,14 @@ function SteamWidget({ steamId, apiKey }) {
       }
     };
 
-    if (apiKey && apiKey !== "YOUR_STEAM_API_KEY") {
+    if (steamId) {
       fetchSteamData();
-    } else {
-      setLoading(false);
-      setError(true);
     }
     
     // Refresh every 5 minutes
     const interval = setInterval(fetchSteamData, 300000);
     return () => clearInterval(interval);
-  }, [steamId, apiKey]);
+  }, [steamId]);
 
   if (loading) {
     return (
@@ -629,8 +617,8 @@ function App() {
               <div />
             </div>
 
-            {/* Steam Widget */}
-            <SteamWidget steamId={STEAM_ID} apiKey={STEAM_API_KEY} />
+            {/* ⬇️ Steam Widget - Already set up correctly */}
+            <SteamWidget steamId={STEAM_ID} />
 
             {/* Music player */}
             <MusicPlayer audioRef={audioRef} playing={playing} setPlaying={setPlaying} />
