@@ -44,9 +44,11 @@ export async function onRequest(context) {
     }
 
     // Recently played (ignore Spacewar)
-    const game = recentData.response.games?.find(
-      (game) => game.appid !== 480
+    const games = recentData.response.games?.filter(
+  (game) => game.appid !== 480
     );
+
+const game = games?.[0];
 
     if (game) {
       return Response.json({
