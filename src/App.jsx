@@ -139,21 +139,21 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   }, [audioRef, setPlaying]);
 
   const togglePlay = async () => {
-  const audio = audioRef.current;
-  if (!audio) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  if (playing) {
-    audio.pause();
-    setPlaying(false);
-  } else {
-    try {
-      await audio.play();
-      setPlaying(true);
-    } catch {
+    if (playing) {
+      audio.pause();
       setPlaying(false);
+    } else {
+      try {
+        await audio.play();
+        setPlaying(true);
+      } catch {
+        setPlaying(false);
+      }
     }
-  }
-};
+  };
 
   const toggleMute = () => {
     const audio = audioRef.current;
@@ -288,68 +288,75 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   );
 }
 
-// ⬇️ Steam Widget - UPDATED with View on Steam button
+// ⬇️ Steam Widget - UPDATED with proper data handling
 function SteamWidget({ steamId }) {
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-  const fetchSteamData = async () => {
-    try {
-      setLoading(true);
+    const fetchSteamData = async () => {
+      try {
+        setLoading(true);
 
-      const response = await fetch(`/api/steam?steamid=${steamId}`);
+        const response = await fetch(`/api/steam?steamid=${steamId}`);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch Steam data");
-      }
+        if (!response.ok) {
+          throw new Error("Failed to fetch Steam data");
+        }
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.playing) {
-        setGameData({
-          name: data.name,
-          appid: data.appid,
-          playtime: null,
-          lastPlayed: null,
-          isPlaying: true,
-          icon: `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${data.appid}/icon.jpg`,
-        });
-      } else if (data.game) {
-        setGameData({
-          name: data.game.name,
-          appid: data.game.appid,
-          playtime: data.game.playtime_2weeks
+        // Handle "currently playing" response
+        if (data.playing) {
+          setGameData({
+            name: data.name,
+            appid: data.appid,
+            playtime: null,
+            lastPlayed: null,
+            isPlaying: true,
+            icon: `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${data.appid}/icon.jpg`,
+          });
+        } 
+        // Handle "recently played" response
+        else if (data.game) {
+          const playtimeHours = data.game.playtime_2weeks
             ? Math.round(data.game.playtime_2weeks / 60)
-            : 0,
-          lastPlayed: "Recently",
-          isPlaying: false,
-          icon: data.game.img_icon_url
-            ? `https://media.steampowered.com/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`
-            : null,
-        });
-      } else {
-        setGameData(null);
+            : 0;
+          
+          setGameData({
+            name: data.game.name,
+            appid: data.game.appid,
+            playtime: playtimeHours,
+            lastPlayed: data.game.last_played || "Recently",
+            isPlaying: false,
+            icon: data.game.img_icon_url
+              ? `https://media.steampowered.com/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`
+              : null,
+          });
+        } 
+        // No games found
+        else {
+          setGameData(null);
+        }
+
+        setLoading(false);
+        setError(false);
+      } catch (error) {
+        console.log("Error fetching Steam data:", error);
+        setLoading(false);
+        setError(true);
       }
+    };
 
-      setLoading(false);
-      setError(false);
-    } catch (error) {
-      console.log("Error fetching Steam data:", error);
-      setLoading(false);
-      setError(true);
-    }
-  };
+    if (!steamId) return;
 
-  if (!steamId) return;
+    fetchSteamData();
 
-  fetchSteamData();
+    const interval = setInterval(fetchSteamData, 300000);
 
-  const interval = setInterval(fetchSteamData, 300000);
-
-  return () => clearInterval(interval);
-}, [steamId]);
+    return () => clearInterval(interval);
+  }, [steamId]);
 
   if (loading) {
     return (
@@ -381,7 +388,7 @@ function SteamWidget({ steamId }) {
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
-      {gameData.icon && (
+      {gameData.icon ? (
         <img 
           src={gameData.icon} 
           alt={gameData.name} 
@@ -390,6 +397,10 @@ function SteamWidget({ steamId }) {
             e.target.style.display = 'none';
           }}
         />
+      ) : (
+        <div className="flex items-center justify-center w-12 h-12 rounded-md bg-[#1e1e1e]">
+          <Gamepad2 size={20} style={{ color: TEXT_MUTED }} />
+        </div>
       )}
       
       <div className="flex-1">
@@ -399,7 +410,10 @@ function SteamWidget({ steamId }) {
           </span>
           <span
             className="text-[8px] px-1.5 py-0.5 rounded"
-            style={{ background: PURPLE_DARK, color: PURPLE }}
+            style={{ 
+              background: gameData.isPlaying ? PURPLE_DARK : "#222", 
+              color: gameData.isPlaying ? PURPLE : "#888" 
+            }}
           >
             {gameData.isPlaying ? "NOW PLAYING" : "LAST PLAYED"}
           </span>
@@ -407,29 +421,45 @@ function SteamWidget({ steamId }) {
         
         {gameData.isPlaying ? (
           <div className="text-xs" style={{ color: TEXT_MUTED }}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5" style={{ background: PURPLE, animation: 'pulse 1.5s ease-in-out infinite' }} />
             Currently playing
           </div>
         ) : (
           <div className="text-xs" style={{ color: "#555" }}>
             Last played: {gameData.lastPlayed}
+            {gameData.playtime > 0 && (
+              <span className="ml-1" style={{ color: TEXT_MUTED }}>
+                · {gameData.playtime}h played
+              </span>
+            )}
           </div>
         )}
 
-        {/* ✅ NEW: View on Steam Button */}
-        <a
-          href={`https://store.steampowered.com/app/${gameData.appid}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-[10px] tracking-wide transition hover:opacity-80"
-          style={{
-            background: "#131313",
-            borderColor: BORDER,
-            color: PURPLE,
-          }}
-        >
-          {gameData.isPlaying ? "Join Game Page" : "View Game"}
-        </a>
+        {/* View on Steam Button */}
+        {gameData.appid && (
+          <a
+            href={`https://store.steampowered.com/app/${gameData.appid}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-[10px] tracking-wide transition hover:opacity-80"
+            style={{
+              background: "#131313",
+              borderColor: BORDER,
+              color: PURPLE,
+            }}
+          >
+            {gameData.isPlaying ? "View Playing Game" : "View Game"}
+          </a>
+        )}
       </div>
+      
+      {/* Pulse animation */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 }
