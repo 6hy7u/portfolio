@@ -7,7 +7,6 @@ import {
   Volume2,
   VolumeX,
   Music,
-  ExternalLink,
 } from "lucide-react";
 
 /**
@@ -289,7 +288,7 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   );
 }
 
-// ⬇️ Steam Widget - UPDATED with better styling and View on Steam button
+// ⬇️ Steam Widget - ONLY calls your Cloudflare Worker, NOT Steam directly!
 function SteamWidget({ steamId }) {
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -381,9 +380,8 @@ function SteamWidget({ steamId }) {
   }
 
   return (
-    <div className="relative flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
-      {/* Game Icon */}
-      {gameData.icon ? (
+    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
+      {gameData.icon && (
         <img 
           src={gameData.icon} 
           alt={gameData.name} 
@@ -392,67 +390,31 @@ function SteamWidget({ steamId }) {
             e.target.style.display = 'none';
           }}
         />
-      ) : (
-        <div className="flex items-center justify-center w-12 h-12 rounded-md bg-[#1e1e1e]">
-          <Gamepad2 size={20} style={{ color: TEXT_MUTED }} />
-        </div>
       )}
-      
-      {/* Game Info */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-[#f0f0f0] truncate">
+          <span className="text-xs font-semibold text-[#f0f0f0]">
             {gameData.name}
           </span>
           <span
-            className="text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap"
-            style={{ 
-              background: gameData.isPlaying ? PURPLE_DARK : "#222", 
-              color: gameData.isPlaying ? PURPLE : "#888" 
-            }}
+            className="text-[8px] px-1.5 py-0.5 rounded"
+            style={{ background: PURPLE_DARK, color: PURPLE }}
           >
             {gameData.isPlaying ? "NOW PLAYING" : "LAST PLAYED"}
           </span>
         </div>
         
+        {/* ✅ FIXED: Clean conditional rendering for game status */}
         {gameData.isPlaying ? (
           <div className="text-xs" style={{ color: TEXT_MUTED }}>
-            <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5" style={{ background: PURPLE, animation: 'pulse 1.5s ease-in-out infinite' }} />
             Currently playing
           </div>
         ) : (
           <div className="text-xs" style={{ color: "#555" }}>
             Last played: {gameData.lastPlayed}
-            {gameData.playtime > 0 && (
-              <span className="ml-1" style={{ color: TEXT_MUTED }}>
-                · {gameData.playtime}h played
-              </span>
-            )}
           </div>
         )}
       </div>
-
-      {/* View on Steam Button - appears when a game is being played */}
-      {gameData.isPlaying && gameData.appid && (
-        <a
-          href={`https://store.steampowered.com/app/${gameData.appid}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute top-1.5 right-1.5 p-1 rounded transition-opacity hover:opacity-100 opacity-60"
-          style={{ color: TEXT_MUTED }}
-          title="View on Steam"
-        >
-          <ExternalLink size={12} />
-        </a>
-      )}
-      
-      {/* Add pulse animation */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-      `}</style>
     </div>
   );
 }
