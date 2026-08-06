@@ -22,7 +22,7 @@ import {
 // ---- Edit these to your own info -----------------------------------------
 const PROFILE = {
   displayName: "R.H",
-  handle: "@r.hassan",
+  handle: "@r-hassan",
   bio: "Made this for fun",
   avatar: "/profile.png",
   status: "online", // "online" | "offline"
@@ -47,6 +47,10 @@ const TRACK = {
   src: "/music.mp3",
   art: "/cover.png",
 };
+
+// Steam API configuration
+const STEAM_API_KEY = "5D1270BD73861F88A946B6F1855804DF"; // Get from https://steamcommunity.com/dev/apikey
+const STEAM_ID = "76561199491396349"; // Your Steam ID
 // ---------------------------------------------------------------------------
 
 // Design tokens, matched to the reference palette
@@ -282,6 +286,124 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   );
 }
 
+// Steam Widget Component
+function SteamWidget({ steamId, apiKey }) {
+  const [gameData, setGameData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchSteamData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${apiKey}&steamid=${steamId}&format=json&count=1`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch Steam data');
+        }
+        
+        const data = await response.json();
+        
+        if (data.response && data.response.games && data.response.games.length > 0) {
+          const game = data.response.games[0];
+          const playtimeHours = Math.round(game.playtime_2weeks / 60);
+          
+          // Get game details for icon
+          const gameDetailsResponse = await fetch(
+            `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${apiKey}&appid=${game.appid}&format=json`
+          );
+          const gameDetails = await gameDetailsResponse.json();
+          
+          setGameData({
+            name: game.name,
+            playtime: playtimeHours,
+            appid: game.appid,
+            icon: `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`,
+            iconLarge: `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${game.appid}/${game.img_logo_url}.jpg`,
+            lastPlayed: 'Recently'
+          });
+        } else {
+          setGameData(null);
+        }
+        setLoading(false);
+        setError(false);
+      } catch (error) {
+        console.log('Error fetching Steam data:', error);
+        setLoading(false);
+        setError(true);
+      }
+    };
+
+    if (apiKey && apiKey !== "YOUR_STEAM_API_KEY") {
+      fetchSteamData();
+    } else {
+      setLoading(false);
+      setError(true);
+    }
+    
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchSteamData, 300000);
+    return () => clearInterval(interval);
+  }, [steamId, apiKey]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
+        <div className="w-12 h-12 rounded-md bg-[#1e1e1e] animate-pulse" />
+        <div className="flex-1">
+          <div className="h-4 w-24 bg-[#1e1e1e] rounded animate-pulse mb-2" />
+          <div className="h-3 w-20 bg-[#1e1e1e] rounded animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !gameData) {
+    return (
+      <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
+        <div className="flex items-center justify-center w-12 h-12 rounded-md bg-[#1e1e1e]">
+          <Gamepad2 size={20} style={{ color: TEXT_MUTED }} />
+        </div>
+        <div>
+          <div className="text-sm text-[#555]">No recent games</div>
+          <div className="text-xs" style={{ color: TEXT_MUTED }}>Set your Steam profile to public</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
+      {gameData.icon && (
+        <img 
+          src={gameData.icon} 
+          alt={gameData.name} 
+          className="w-12 h-12 rounded-md object-cover"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+      )}
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-[#f0f0f0]">{gameData.name}</span>
+          <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: PURPLE_DARK, color: PURPLE }}>
+            NOW PLAYING
+          </span>
+        </div>
+        <div className="text-xs" style={{ color: TEXT_MUTED }}>
+          {gameData.playtime} hrs played in last 2 weeks
+        </div>
+        <div className="text-xs" style={{ color: '#555' }}>
+          Last played: {gameData.lastPlayed}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [playing, setPlaying] = useState(false);
@@ -355,7 +477,7 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setTitleIndex((prev) => (prev + 1) % textStates.length);
-    }, 200); // Changed from 300ms to 200ms for faster transitions
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [titleIndex]);
@@ -506,6 +628,9 @@ function App() {
               {/* Removed LikeButton */}
               <div />
             </div>
+
+            {/* Steam Widget */}
+            <SteamWidget steamId={STEAM_ID} apiKey={STEAM_API_KEY} />
 
             {/* Music player */}
             <MusicPlayer audioRef={audioRef} playing={playing} setPlaying={setPlaying} />
