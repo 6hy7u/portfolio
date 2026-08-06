@@ -2,9 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Gamepad2,
-  MessageCircle,
-  ThumbsUp,
-  Eye,
   Play,
   Pause,
   Volume2,
@@ -141,16 +138,22 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
     };
   }, [audioRef, setPlaying]);
 
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (playing) {
-      audio.pause();
-    } else {
-      audio.play().catch(() => {});
+  const togglePlay = async () => {
+  const audio = audioRef.current;
+  if (!audio) return;
+
+  if (playing) {
+    audio.pause();
+    setPlaying(false);
+  } else {
+    try {
+      await audio.play();
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
     }
-    setPlaying(!playing);
-  };
+  }
+};
 
   const toggleMute = () => {
     const audio = audioRef.current;
@@ -292,58 +295,61 @@ function SteamWidget({ steamId }) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchSteamData = async () => {
-      try {
-        setLoading(true);
-        // ⬇️ This calls YOUR Cloudflare Worker - NO direct Steam API call!
-        const response = await fetch(`/api/steam?steamid=${steamId}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch Steam data');
-        }
-        
-        const data = await response.json();
-        
-        if (data.playing) {
-  setGameData({
-    name: data.name,
-    appid: data.appid,
-    playtime: null,
-    lastPlayed: null,
-    isPlaying: true,
-    icon: `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${data.appid}/icon.jpg`,
-  });
-} else if (data.game) {
-  setGameData({
-    name: data.game.name,
-    appid: data.game.appid,
-    playtime: data.game.playtime_2weeks
-      ? Math.round(data.game.playtime_2weeks / 60)
-      : 0,
-    lastPlayed: "Recently",
-    isPlaying: false,
-    icon: data.game.img_icon_url
-      ? `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`
-      : null,
-  });
-}
-        setLoading(false);
-        setError(false);
-      } catch (error) {
-        console.log('Error fetching Steam data:', error);
-        setLoading(false);
-        setError(true);
-      }
-    };
+  const fetchSteamData = async () => {
+    try {
+      setLoading(true);
 
-    if (steamId) {
-      fetchSteamData();
+      const response = await fetch(`/api/steam?steamid=${steamId}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch Steam data");
+      }
+
+      const data = await response.json();
+
+      if (data.playing) {
+        setGameData({
+          name: data.name,
+          appid: data.appid,
+          playtime: null,
+          lastPlayed: null,
+          isPlaying: true,
+          icon: `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${data.appid}/icon.jpg`,
+        });
+      } else if (data.game) {
+        setGameData({
+          name: data.game.name,
+          appid: data.game.appid,
+          playtime: data.game.playtime_2weeks
+            ? Math.round(data.game.playtime_2weeks / 60)
+            : 0,
+          lastPlayed: "Recently",
+          isPlaying: false,
+          icon: data.game.img_icon_url
+            ? `https://media.steampowered.com/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`
+            : null,
+        });
+      } else {
+        setGameData(null);
+      }
+
+      setLoading(false);
+      setError(false);
+    } catch (error) {
+      console.log("Error fetching Steam data:", error);
+      setLoading(false);
+      setError(true);
     }
-    
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchSteamData, 300000);
-    return () => clearInterval(interval);
-  }, [steamId]);
+  };
+
+  if (!steamId) return;
+
+  fetchSteamData();
+
+  const interval = setInterval(fetchSteamData, 300000);
+
+  return () => clearInterval(interval);
+}, [steamId]);
 
   if (loading) {
     return (
@@ -365,7 +371,9 @@ function SteamWidget({ steamId }) {
         </div>
         <div>
           <div className="text-sm text-[#555]">No recent games</div>
-          <div className="text-xs" style={{ color: TEXT_MUTED }}>Set your Steam profile to public</div>
+          <div className="text-xs" style={{ color: TEXT_MUTED }}>
+            Steam data unavailable
+          </div>
         </div>
       </div>
     );
@@ -383,36 +391,30 @@ function SteamWidget({ steamId }) {
           }}
         />
       )}
-      <div className="flex items-center gap-2">
-  <span className="text-xs font-semibold text-[#f0f0f0]">
-    {gameData.name}
-  </span>
-
-  <span
-    className="text-[8px] px-1.5 py-0.5 rounded"
-    style={{ background: PURPLE_DARK, color: PURPLE }}
-  >
-    {gameData.isPlaying ? "NOW PLAYING" : "LAST PLAYED"}
-  </span>
-</div>
-
-{gameData.isPlaying ? (
-  <div className="text-xs" style={{ color: TEXT_MUTED }}>
-    Currently playing
-  </div>
-) : (
-  <>
-    <div className="text-xs" style={{ color: TEXT_MUTED }}>
-  {gameData.isPlaying
-    ? "Currently playing"
-    : `${gameData.playtime} hrs played in last 2 weeks`}
-</div>
-
-    <div className="text-xs" style={{ color: "#555" }}>
-      Last played: {gameData.lastPlayed}
-    </div>
-  </>
-)}
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-[#f0f0f0]">
+            {gameData.name}
+          </span>
+          <span
+            className="text-[8px] px-1.5 py-0.5 rounded"
+            style={{ background: PURPLE_DARK, color: PURPLE }}
+          >
+            {gameData.isPlaying ? "NOW PLAYING" : "LAST PLAYED"}
+          </span>
+        </div>
+        
+        {/* ✅ FIXED: Clean conditional rendering for game status */}
+        {gameData.isPlaying ? (
+          <div className="text-xs" style={{ color: TEXT_MUTED }}>
+            Currently playing
+          </div>
+        ) : (
+          <div className="text-xs" style={{ color: "#555" }}>
+            Last played: {gameData.lastPlayed}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
