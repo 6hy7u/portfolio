@@ -69,17 +69,7 @@ export async function onRequest(context) {
 
     const game = recentData.response.games?.[0];
 
-    return new Response(
-      JSON.stringify({
-        playing: false,
-        game,
-      }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    
   } catch (error) {
     return new Response(
       JSON.stringify({
