@@ -22,8 +22,19 @@ export async function onRequest(context) {
   
   try {
     const steamResponse = await fetch(
-      `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${apiKey}&steamid=${steamId}&format=json&count=1`
-    );
+  `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${apiKey}&steamid=${steamId}&format=json&count=1`
+);
+
+console.log("Steam status:", steamResponse.status);
+
+const text = await steamResponse.text();
+console.log(text);
+
+return new Response(text, {
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
     
     const data = await steamResponse.json();
     
