@@ -36,14 +36,14 @@ export async function onRequest(context) {
     );
 
     const recentResponse = await fetch(
-      `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${apiKey}&steamid=${steamId}&count=1&format=json`
+      `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${apiKey}&steamid=${steamId}&count=10&format=json`
     );
 
     const currentData = await currentResponse.json();
     const recentData = await recentResponse.json();
 
     const player = currentData.response.players[0];
-    
+
     return new Response(
   JSON.stringify({
     current: currentData,
@@ -71,7 +71,9 @@ export async function onRequest(context) {
       );
     }
 
-    const game = recentData.response.games?.[0];
+    const game = recentData.response.games?.find(
+  (game) => game.appid !== 480
+);
 
     
   } catch (error) {
