@@ -43,6 +43,14 @@ export async function onRequest(context) {
     const recentData = await recentResponse.json();
 
     const player = currentData.response.players[0];
+    return new Response(
+  JSON.stringify(player, null, 2),
+  {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+);
 
     if (player?.gameid) {
       return new Response(
