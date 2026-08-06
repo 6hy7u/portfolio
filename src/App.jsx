@@ -7,6 +7,7 @@ import {
   Volume2,
   VolumeX,
   Music,
+  ExternalLink,
 } from "lucide-react";
 
 /**
@@ -288,7 +289,7 @@ function MusicPlayer({ audioRef, playing, setPlaying }) {
   );
 }
 
-// ⬇️ Steam Widget - UPDATED with proper data handling
+// ⬇️ Steam Widget - NOW MATCHES THE MUSIC PLAYER STYLE!
 function SteamWidget({ steamId }) {
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -307,7 +308,6 @@ function SteamWidget({ steamId }) {
 
         const data = await response.json();
 
-        // Handle "currently playing" response
         if (data.playing) {
           setGameData({
             name: data.name,
@@ -317,9 +317,7 @@ function SteamWidget({ steamId }) {
             isPlaying: true,
             icon: `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${data.appid}/icon.jpg`,
           });
-        } 
-        // Handle "recently played" response
-        else if (data.game) {
+        } else if (data.game) {
           const playtimeHours = data.game.playtime_2weeks
             ? Math.round(data.game.playtime_2weeks / 60)
             : 0;
@@ -334,9 +332,7 @@ function SteamWidget({ steamId }) {
               ? `https://media.steampowered.com/steamcommunity/public/images/apps/${data.game.appid}/${data.game.img_icon_url}.jpg`
               : null,
           });
-        } 
-        // No games found
-        else {
+        } else {
           setGameData(null);
         }
 
@@ -360,11 +356,16 @@ function SteamWidget({ steamId }) {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
-        <div className="w-12 h-12 rounded-md bg-[#1e1e1e] animate-pulse" />
-        <div className="flex-1">
-          <div className="h-4 w-24 bg-[#1e1e1e] rounded animate-pulse mb-2" />
-          <div className="h-3 w-20 bg-[#1e1e1e] rounded animate-pulse" />
+      <div
+        className="w-full rounded-xl border p-4"
+        style={{ background: CARD_BG, borderColor: BORDER }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-[46px] w-[46px] rounded-md bg-[#1e1e1e] animate-pulse" />
+          <div className="flex-1">
+            <div className="h-4 w-32 bg-[#1e1e1e] rounded animate-pulse mb-2" />
+            <div className="h-3 w-20 bg-[#1e1e1e] rounded animate-pulse" />
+          </div>
         </div>
       </div>
     );
@@ -372,14 +373,19 @@ function SteamWidget({ steamId }) {
 
   if (error || !gameData) {
     return (
-      <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
-        <div className="flex items-center justify-center w-12 h-12 rounded-md bg-[#1e1e1e]">
-          <Gamepad2 size={20} style={{ color: TEXT_MUTED }} />
-        </div>
-        <div>
-          <div className="text-sm text-[#555]">No recent games</div>
-          <div className="text-xs" style={{ color: TEXT_MUTED }}>
-            Steam data unavailable
+      <div
+        className="w-full rounded-xl border p-4"
+        style={{ background: CARD_BG, borderColor: BORDER }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-[46px] w-[46px] items-center justify-center rounded-md bg-[#1e1e1e]">
+            <Gamepad2 size={18} style={{ color: TEXT_MUTED }} />
+          </div>
+          <div>
+            <div className="text-[13px] font-semibold text-[#555]">No recent games</div>
+            <div className="text-[11px]" style={{ color: TEXT_MUTED }}>
+              Steam data unavailable
+            </div>
           </div>
         </div>
       </div>
@@ -387,77 +393,95 @@ function SteamWidget({ steamId }) {
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: BORDER, background: "#131313" }}>
-      {gameData.icon ? (
-        <img 
-          src={gameData.icon} 
-          alt={gameData.name} 
-          className="w-12 h-12 rounded-md object-cover"
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
-      ) : (
-        <div className="flex items-center justify-center w-12 h-12 rounded-md bg-[#1e1e1e]">
-          <Gamepad2 size={20} style={{ color: TEXT_MUTED }} />
-        </div>
-      )}
-      
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-[#f0f0f0]">
-            {gameData.name}
-          </span>
-          <span
-            className="text-[8px] px-1.5 py-0.5 rounded"
-            style={{ 
-              background: gameData.isPlaying ? PURPLE_DARK : "#222", 
-              color: gameData.isPlaying ? PURPLE : "#888" 
+    <div
+      className="w-full overflow-visible rounded-xl border"
+      style={{ background: CARD_BG, borderColor: BORDER }}
+    >
+      {/* Top row: icon, game name, status badge */}
+      <div className="flex items-center gap-2.5 px-3 pb-1 pt-3">
+        {gameData.icon ? (
+          <img 
+            src={gameData.icon} 
+            alt={gameData.name} 
+            className="h-[46px] w-[46px] rounded-[5px] object-cover"
+            onError={(e) => {
+              e.target.style.display = 'none';
             }}
-          >
-            {gameData.isPlaying ? "NOW PLAYING" : "LAST PLAYED"}
-          </span>
-        </div>
-        
-        {gameData.isPlaying ? (
-          <div className="text-xs" style={{ color: TEXT_MUTED }}>
-            <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5" style={{ background: PURPLE, animation: 'pulse 1.5s ease-in-out infinite' }} />
-            Currently playing
-          </div>
+          />
         ) : (
-          <div className="text-xs" style={{ color: "#555" }}>
-            Last played: {gameData.lastPlayed}
-            {gameData.playtime > 0 && (
-              <span className="ml-1" style={{ color: TEXT_MUTED }}>
-                · {gameData.playtime}h played
+          <div className="flex h-[46px] w-[46px] items-center justify-center rounded-[5px] bg-[#131313]">
+            <Gamepad2 size={18} style={{ color: TEXT_DIM }} />
+          </div>
+        )}
+        
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13px] font-semibold text-[#f0f0f0]">
+            {gameData.name}
+          </div>
+          <div className="mt-[2px] flex items-center gap-2">
+            <span 
+              className="text-[10px]"
+              style={{ color: gameData.isPlaying ? PURPLE : "#555" }}
+            >
+              {gameData.isPlaying ? (
+                <>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full mr-1" style={{ background: PURPLE, animation: 'pulse 1.5s ease-in-out infinite' }} />
+                  Currently playing
+                </>
+              ) : (
+                <>Last played: {gameData.lastPlayed}</>
+              )}
+            </span>
+            {!gameData.isPlaying && gameData.playtime > 0 && (
+              <span className="text-[10px]" style={{ color: "#555" }}>
+                · {gameData.playtime}h
               </span>
             )}
           </div>
-        )}
+        </div>
 
-        {/* View on Steam Button */}
+        {/* Status Badge - matches music player style */}
+        <span
+          className="shrink-0 text-[8px] px-2 py-1 rounded-full tracking-wider"
+          style={{ 
+            background: gameData.isPlaying ? PURPLE_DARK : "#1e1e1e", 
+            color: gameData.isPlaying ? PURPLE : "#666" 
+          }}
+        >
+          {gameData.isPlaying ? "● LIVE" : "RECENT"}
+        </span>
+      </div>
+
+      {/* View on Steam Button - matches music player controls style */}
+      <div className="flex items-center gap-2.5 border-t px-3 py-2.5" style={{ borderColor: BORDER }}>
         {gameData.appid && (
           <a
             href={`https://store.steampowered.com/app/${gameData.appid}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-[10px] tracking-wide transition hover:opacity-80"
+            className="group relative flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-wide transition hover:opacity-80 rounded-md border"
             style={{
               background: "#131313",
               borderColor: BORDER,
               color: PURPLE,
             }}
           >
+            <ExternalLink size={11} />
             {gameData.isPlaying ? "View Playing Game" : "View Game"}
+            <Tip>Open Steam store page</Tip>
           </a>
         )}
+        <div className="flex-1" />
+        <span className="text-[9px] tracking-wider opacity-40" style={{ color: PURPLE }}>
+          steam
+        </span>
       </div>
-      
+
       {/* Pulse animation */}
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
+          50% { opacity: 0.2; }
         }
       `}</style>
     </div>
@@ -689,7 +713,7 @@ function App() {
               <div />
             </div>
 
-            {/* Steam Widget */}
+            {/* Steam Widget - Now matches the music player style! */}
             <SteamWidget steamId={STEAM_ID} />
 
             {/* Music player */}
